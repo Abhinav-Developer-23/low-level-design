@@ -1,0 +1,11 @@
+1. display all cinemas based on selected city
+2. cinema can have multiple halls and each hall can run one movie at a time
+3. within a day each movie can have multiple shows
+4. users should be able to search movies by their title , language , release date ,city name
+5. on selecting a movie , it should display all the cinemas running that movie , cinemas can be filtered based on selected city
+6. users should be able to select cinema and  book the ticket
+7. system should redirect to seating arrangement and users should be able to select the seats
+8. users should be able to complete the payments
+9. seats should be able to distinguish between occupied and vacant
+10. same seats cannot be booked by multiple users
+11. user should be able to cancel the ticket

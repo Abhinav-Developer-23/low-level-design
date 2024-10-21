@@ -1,8 +1,9 @@
 package org.lowLevelDesign.DesignPatterns.AbstractFactory.implementations;
 
-import src.LLD.DesignPatterns.AbstractFactory.Interface.Button;
-import src.LLD.DesignPatterns.AbstractFactory.Interface.Checkbox;
-import src.LLD.DesignPatterns.AbstractFactory.Interface.GUIFactory;
+
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.Button;
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.Checkbox;
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.GUIFactory;
 
 // Concrete factory for Windows
 public class WindowsFactory implements GUIFactory {

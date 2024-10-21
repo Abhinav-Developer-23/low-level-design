@@ -1,6 +1,8 @@
 package org.lowLevelDesign.DesignPatterns.FactoryDesignPattern.Implementations;
 
-import src.LLD.DesignPatterns.FactoryDesignPattern.Interface.Shape;
+import org.lowLevelDesign.DesignPatterns.FactoryDesignPattern.Interface.Shape;
+
+;
 
 public class Circle implements Shape {
 

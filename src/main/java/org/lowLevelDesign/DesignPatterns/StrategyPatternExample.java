@@ -1,6 +1,6 @@
 package org.lowLevelDesign.DesignPatterns;
 
-import lombok.extern.slf4j.Slf4j;
+
 
 // Step 1: Define the Strategy Interface
 // This interface defines the method that all payment strategies must implement.

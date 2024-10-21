@@ -1,7 +1,7 @@
 package org.lowLevelDesign.DesignPatterns.AbstractFactory.implementations;
 
 
-import src.LLD.DesignPatterns.AbstractFactory.Interface.Button;
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.Button;
 
 // Concrete product: macOS Button
 public class MacOSButton implements Button {

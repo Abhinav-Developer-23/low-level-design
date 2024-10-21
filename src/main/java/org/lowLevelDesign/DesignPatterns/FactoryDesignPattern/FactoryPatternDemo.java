@@ -1,8 +1,8 @@
 package org.lowLevelDesign.DesignPatterns.FactoryDesignPattern;
 
 
-import src.LLD.DesignPatterns.FactoryDesignPattern.Implementations.ShapeFactory;
-import src.LLD.DesignPatterns.FactoryDesignPattern.Interface.Shape;
+import org.lowLevelDesign.DesignPatterns.FactoryDesignPattern.Implementations.ShapeFactory;
+import org.lowLevelDesign.DesignPatterns.FactoryDesignPattern.Interface.Shape;
 
 public class FactoryPatternDemo {
 

@@ -1,10 +1,11 @@
 package org.lowLevelDesign.DesignPatterns.AbstractFactory;
 
-import src.LLD.DesignPatterns.AbstractFactory.Interface.Button;
-import src.LLD.DesignPatterns.AbstractFactory.Interface.Checkbox;
-import src.LLD.DesignPatterns.AbstractFactory.Interface.GUIFactory;
-import src.LLD.DesignPatterns.AbstractFactory.implementations.MacOSFactory;
-import src.LLD.DesignPatterns.AbstractFactory.implementations.WindowsFactory;
+
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.Button;
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.Checkbox;
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.GUIFactory;
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.implementations.MacOSFactory;
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.implementations.WindowsFactory;
 
 // Client code
 public class Application {

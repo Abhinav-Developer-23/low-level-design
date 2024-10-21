@@ -1,7 +1,7 @@
 package org.lowLevelDesign.DesignPatterns.AbstractFactory.implementations;
 
 
-import src.LLD.DesignPatterns.AbstractFactory.Interface.Checkbox;
+import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.Checkbox;
 
 // Concrete product: MacOS Checkbox
 public class MacOSCheckbox implements Checkbox {

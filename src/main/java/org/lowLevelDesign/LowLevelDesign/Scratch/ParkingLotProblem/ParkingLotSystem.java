@@ -1,4 +1,4 @@
-package org.lowLevelDesign.LowLevelDesign.ParkingLotProblem;
+package org.lowLevelDesign.LowLevelDesign.Scratch.ParkingLotProblem;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

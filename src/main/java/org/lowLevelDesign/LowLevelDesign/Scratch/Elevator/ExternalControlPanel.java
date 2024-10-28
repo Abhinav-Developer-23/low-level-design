@@ -1,4 +1,4 @@
-package org.lowLevelDesign.LowLevelDesign.Elevator;
+package org.lowLevelDesign.LowLevelDesign.Scratch.Elevator;
 
 public class ExternalControlPanel implements ControlPanel{
 

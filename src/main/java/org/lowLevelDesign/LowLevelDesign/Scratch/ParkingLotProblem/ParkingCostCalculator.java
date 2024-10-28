@@ -1,4 +1,4 @@
-package org.lowLevelDesign.LowLevelDesign.ParkingLotProblem;
+package org.lowLevelDesign.LowLevelDesign.Scratch.ParkingLotProblem;
 
 public interface ParkingCostCalculator {
 

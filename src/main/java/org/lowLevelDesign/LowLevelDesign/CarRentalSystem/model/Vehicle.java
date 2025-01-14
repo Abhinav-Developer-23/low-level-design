@@ -27,4 +27,5 @@ public class Vehicle {
     private String color;
     private String transmission;
     private FuelType fuelType;
+    private RentalInsurance insurance;
 }

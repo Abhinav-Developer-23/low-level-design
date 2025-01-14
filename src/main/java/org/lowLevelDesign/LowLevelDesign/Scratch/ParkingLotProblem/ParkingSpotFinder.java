@@ -1,9 +1,0 @@
-package org.lowLevelDesign.LowLevelDesign.Scratch.ParkingLotProblem;
-
-import java.util.List;
-
-public interface ParkingSpotFinder {
-
-     int findParkingSpot(List<List<ParkingSpot>> parkingSpotList);
-
-}

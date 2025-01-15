@@ -27,7 +27,7 @@ package org.lowLevelDesign.DesignPatterns;
 }
 
 /**
- * https://www.geeksforgeeks.org/singleton-design-pattern/
+ *  https://www.geeksforgeeks.org/singleton-design-pattern/
  */
 
 // Example usage

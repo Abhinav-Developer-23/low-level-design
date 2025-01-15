@@ -95,6 +95,11 @@ class HomeTheaterFacade {
     }
 }
 
+
+/**
+ * https://www.geeksforgeeks.org/facade-design-pattern-introduction/
+ */
+
 // Step 3: Demonstrate the Facade Pattern in Action
 public class FacadePatternExample {
     public static void main(String[] args) {

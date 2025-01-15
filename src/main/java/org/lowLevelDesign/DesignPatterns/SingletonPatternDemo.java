@@ -26,6 +26,10 @@ package org.lowLevelDesign.DesignPatterns;
     }
 }
 
+/**
+ * https://www.geeksforgeeks.org/singleton-design-pattern/
+ */
+
 // Example usage
  public class SingletonPatternDemo {
     public static void main(String[] args) {

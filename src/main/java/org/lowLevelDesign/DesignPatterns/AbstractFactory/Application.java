@@ -1,6 +1,7 @@
 package org.lowLevelDesign.DesignPatterns.AbstractFactory;
 
 
+import lombok.Getter;
 import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.Button;
 import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.Checkbox;
 import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.GUIFactory;
@@ -8,7 +9,15 @@ import org.lowLevelDesign.DesignPatterns.AbstractFactory.implementations.MacOSFa
 import org.lowLevelDesign.DesignPatterns.AbstractFactory.implementations.WindowsFactory;
 
 // Client code
+@Getter
 public class Application {
+
+    /**
+     * The Abstract Factory Pattern is a creational design pattern that provides an interface for creating families of related or dependent
+     * objects without specifying their concrete classes. It allows a client to create objects from a specific family (or group) without
+     * knowing exactly which concrete classes are being instantiated.
+     * https://www.tutorialspoint.com/design_pattern/abstract_factory_pattern.htm
+     */
     private Button button;
     private Checkbox checkbox;
 

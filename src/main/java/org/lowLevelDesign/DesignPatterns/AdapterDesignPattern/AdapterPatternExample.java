@@ -131,4 +131,8 @@ public class AdapterPatternExample {
         // Attempt to charge an invalid device
         station.charge("tablet");  // Invalid device for phone charger
     }
+
+    /**
+     * https://medium.com/@akshatsharma0610/adapter-design-pattern-in-java-fa20d6df25b8
+     */
 }

@@ -80,6 +80,10 @@ class MacBookLaptop implements WeatherObserver {
     }
 }
 
+/**
+ * https://www.geeksforgeeks.org/observer-pattern-set-1-introduction/
+ */
+
 // Main Class (Client)
  public class ObserverPatternExample {
     public static void main(String[] args) {

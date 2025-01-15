@@ -26,4 +26,7 @@ public class BuilderPattern {
         // Display the details of the luxury house
         luxuryHouse.showHouseDetails();
     }
+    /**
+     * https://www.digitalocean.com/community/tutorials/builder-design-pattern-in-java
+     */
 }

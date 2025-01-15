@@ -19,4 +19,4 @@ public class WithdrawTransaction extends Transaction {
         }
         return false;
     }
-} 
+}

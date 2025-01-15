@@ -6,6 +6,12 @@ import org.lowLevelDesign.DesignPatterns.FactoryDesignPattern.Interface.Shape;
 
 public class FactoryPatternDemo {
 
+    /**
+     * https://www.digitalocean.com/community/tutorials/factory-design-pattern-in-java
+     **/
+
+
+
     public static void main(String[] args) {
         ShapeFactory shapeFactory = new ShapeFactory();
 

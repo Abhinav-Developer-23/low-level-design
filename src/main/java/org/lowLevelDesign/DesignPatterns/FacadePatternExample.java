@@ -97,6 +97,9 @@ class HomeTheaterFacade {
 
 
 /**
+ * The Facade Design Pattern is a structural design pattern that provides a simplified interface to a complex subsystem.
+ * It acts as a "front-facing" interface that hides the complexities of the underlying system, making it easier for clients
+ * to interact with it.
  * https://www.geeksforgeeks.org/facade-design-pattern-introduction/
  */
 

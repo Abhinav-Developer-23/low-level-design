@@ -3,7 +3,7 @@ package org.lowLevelDesign.DesignPatterns.AbstractFactory.implementations;
 
 import org.lowLevelDesign.DesignPatterns.AbstractFactory.Interface.Checkbox;
 
-// Concrete product: MacOS Checkbox
+// Concrete product: macOS Checkbox
 public class MacOSCheckbox implements Checkbox {
     @Override
     public void check() {

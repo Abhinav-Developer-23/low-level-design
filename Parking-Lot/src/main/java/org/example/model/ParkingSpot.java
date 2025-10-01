@@ -1,5 +1,9 @@
 package org.example.model;
 
+import org.example.enums.SpotStatus;
+import org.example.enums.VehicleSize;
+import org.example.model.vehicles.Vehicle;
+
 import java.time.LocalDateTime;
 
 /**

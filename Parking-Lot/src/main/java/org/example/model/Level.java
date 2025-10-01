@@ -4,7 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.example.enums.SpotStatus;
+import org.example.enums.VehicleSize;
 import org.example.interfaces.ParkingStrategy;
+import org.example.model.vehicles.Vehicle;
 
 /**
  * Represents a single level/floor in the parking lot.

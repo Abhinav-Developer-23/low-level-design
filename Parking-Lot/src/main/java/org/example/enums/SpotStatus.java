@@ -1,4 +1,4 @@
-package org.example.model;
+package org.example.enums;
 
 /**
  * Enum representing the status of a parking spot.

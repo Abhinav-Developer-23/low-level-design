@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.example.enums.VehicleSize;
 import org.example.interfaces.ParkingStrategy;
 import org.example.interfaces.ParkingObserver;
+import org.example.model.vehicles.Vehicle;
 
 /**
  * Main parking lot management system.

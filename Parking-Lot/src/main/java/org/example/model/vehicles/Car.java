@@ -1,4 +1,6 @@
-package org.example.model;
+package org.example.model.vehicles;
+
+import org.example.enums.VehicleSize;
 
 /**
  * Represents a car vehicle.

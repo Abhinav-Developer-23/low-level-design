@@ -1,4 +1,4 @@
-package org.example;
+package org.example.model.ParkingStrategies;
 
 import java.util.List;
 import java.util.Optional;

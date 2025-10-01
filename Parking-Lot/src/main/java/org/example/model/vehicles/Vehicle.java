@@ -1,4 +1,7 @@
-package org.example.model;
+package org.example.model.vehicles;
+
+import org.example.model.ParkingSpot;
+import org.example.enums.VehicleSize;
 
 /**
  * Abstract base class for all types of vehicles in the parking lot system.

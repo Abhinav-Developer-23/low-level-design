@@ -1,5 +1,7 @@
 package org.example.model;
 
+import org.example.model.vehicles.Vehicle;
+
 import java.time.LocalDateTime;
 
 /**

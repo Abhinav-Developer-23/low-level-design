@@ -2,11 +2,17 @@ package org.example;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.example.enums.VehicleSize;
 import org.example.model.*;
 import org.example.interfaces.*;
-import org.example.BestFitStrategy;
-import org.example.NearestSpotStrategy;
-import org.example.RandomSpotStrategy;
+import org.example.model.ParkingStrategies.BestFitStrategy;
+import org.example.model.ParkingStrategies.NearestSpotStrategy;
+import org.example.model.ParkingStrategies.RandomSpotStrategy;
+import org.example.model.vehicles.Car;
+import org.example.model.vehicles.Motorcycle;
+import org.example.model.vehicles.Truck;
+import org.example.model.vehicles.Vehicle;
 
 /**
  * Main demonstration class for the Parking Lot System.

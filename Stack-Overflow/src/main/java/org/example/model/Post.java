@@ -25,6 +25,8 @@ public abstract class Post implements Votable, Commentable {
     protected LocalDateTime updatedAt;
     
     // Simplified voting - just track vote types per user
+    //user tracking is required
+    //Vote Spam: User can click upvote 10 times = 10 votes
     protected final Map<String, VoteType> userVotes; // userId -> VoteType
     protected final AtomicInteger upvotes;
     protected final AtomicInteger downvotes;

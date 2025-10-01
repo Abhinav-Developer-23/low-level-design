@@ -1,0 +1,260 @@
+classDiagram
+    %% Core Model Classes
+    class User {
+        -String userId
+        -String username
+        -String email
+        -UserRole role
+        -int reputation
+        -LocalDateTime createdAt
+        -List~Question~ questions
+        -List~Answer~ answers
+        -List~Comment~ comments
+        +addReputation(int)
+        +addQuestion(Question)
+        +addAnswer(Answer)
+        +addComment(Comment)
+    }
+
+    class Question {
+        -String questionId
+        -User author
+        -String title
+        -String content
+        -QuestionStatus status
+        -AtomicInteger voteCount
+        -AtomicInteger viewCount
+        -LocalDateTime createdAt
+        -Set~Tag~ tags
+        -Map~String,Vote~ votes
+        -List~Answer~ answers
+        -List~Comment~ comments
+        +updateContent(String, String)
+        +addVote(Vote)
+        +addAnswer(Answer)
+        +addComment(Comment)
+        +incrementViewCount()
+    }
+
+    class Answer {
+        -String answerId
+        -User author
+        -String content
+        -Question question
+        -boolean isAccepted
+        -AtomicInteger voteCount
+        -LocalDateTime createdAt
+        -Map~String,Vote~ votes
+        -List~Comment~ comments
+        +updateContent(String)
+        +markAsAccepted()
+        +addVote(Vote)
+        +addComment(Comment)
+    }
+
+    class Comment {
+        -String commentId
+        -User author
+        -String content
+        -LocalDateTime createdAt
+        -LocalDateTime updatedAt
+        +updateContent(String)
+    }
+
+    class Vote {
+        -String voteId
+        -User user
+        -VoteType voteType
+        -LocalDateTime createdAt
+        +changeVote(VoteType)
+    }
+
+    class Tag {
+        -String tagId
+        -String name
+        -String description
+    }
+
+    %% Enums
+    class VoteType {
+        <<enumeration>>
+        UPVOTE
+        DOWNVOTE
+        +getValue() int
+    }
+
+    class QuestionStatus {
+        <<enumeration>>
+        OPEN
+        CLOSED
+        DELETED
+        FLAGGED
+    }
+
+    class UserRole {
+        <<enumeration>>
+        ADMIN
+        MODERATOR
+        MEMBER
+        GUEST
+    }
+
+    %% Interfaces
+    class Votable {
+        <<interface>>
+        +addVote(Vote) Vote
+        +removeVote(String) boolean
+        +getVoteCount() int
+    }
+
+    class Commentable {
+        <<interface>>
+        +addComment(Comment)
+        +getComments() List~Comment~
+    }
+
+    class ReputationStrategy {
+        <<interface>>
+        +calculateQuestionVoteReputation(VoteType) int
+        +calculateAnswerVoteReputation(VoteType) int
+        +calculateAcceptedAnswerReputation() int
+        +calculateQuestionPostedReputation() int
+        +calculateAnswerPostedReputation() int
+    }
+
+    class SearchStrategy {
+        <<interface>>
+        +search(String, List~Question~) List~Question~
+    }
+
+    class NotificationObserver {
+        <<interface>>
+        +onQuestionAnswered(String, String, User)
+        +onAnswerAccepted(String, User)
+        +onQuestionCommented(String, String, User)
+        +onAnswerCommented(String, String, User)
+        +onQuestionVoted(String, User)
+        +onAnswerVoted(String, User)
+    }
+
+    %% Strategy Implementations
+    class DefaultReputationStrategy {
+        +calculateQuestionVoteReputation(VoteType) int
+        +calculateAnswerVoteReputation(VoteType) int
+        +calculateAcceptedAnswerReputation() int
+    }
+
+    class GenerousReputationStrategy {
+        +calculateQuestionVoteReputation(VoteType) int
+        +calculateAnswerVoteReputation(VoteType) int
+        +calculateAcceptedAnswerReputation() int
+    }
+
+    class KeywordSearchStrategy {
+        +search(String, List~Question~) List~Question~
+    }
+
+    class TagSearchStrategy {
+        +search(String, List~Question~) List~Question~
+    }
+
+    class UserSearchStrategy {
+        +search(String, List~Question~) List~Question~
+    }
+
+    class CompositeSearchStrategy {
+        -List~SearchStrategy~ strategies
+        +search(String, List~Question~) List~Question~
+    }
+
+    %% Observer Implementations
+    class ConsoleNotificationObserver {
+        -User user
+        +onQuestionAnswered(String, String, User)
+        +onAnswerAccepted(String, User)
+    }
+
+    class EmailNotificationObserver {
+        -User user
+        +onQuestionAnswered(String, String, User)
+        +onAnswerAccepted(String, User)
+        -sendEmail(String, String)
+    }
+
+    %% System
+    class StackOverflowSystem {
+        <<singleton>>
+        -StackOverflowSystem instance
+        -Map~String,User~ users
+        -Map~String,Question~ questions
+        -Map~String,Answer~ answers
+        -Map~String,Tag~ tags
+        -List~NotificationObserver~ observers
+        -ReputationStrategy reputationStrategy
+        +getInstance() StackOverflowSystem
+        +createUser(String, String, UserRole) User
+        +postQuestion(User, String, String, Set~Tag~) Question
+        +postAnswer(User, Question, String) Answer
+        +voteOnQuestion(User, Question, VoteType)
+        +voteOnAnswer(User, Answer, VoteType)
+        +commentOnQuestion(User, Question, String) Comment
+        +commentOnAnswer(User, Answer, String) Comment
+        +acceptAnswer(Answer, User)
+        +searchQuestions(String, SearchStrategy) List~Question~
+        +registerObserver(NotificationObserver)
+        +setReputationStrategy(ReputationStrategy)
+    }
+
+    %% Relationships
+    User "1" --> "*" Question : posts
+    User "1" --> "*" Answer : posts
+    User "1" --> "*" Comment : writes
+    User --> UserRole
+
+    Question "1" --> "*" Answer : has
+    Question "1" --> "*" Comment : has
+    Question "*" --> "*" Tag : tagged with
+    Question "1" --> "*" Vote : has
+    Question --> QuestionStatus
+    Question --> User : author
+
+    Answer "1" --> "*" Comment : has
+    Answer "1" --> "*" Vote : has
+    Answer --> Question : answers
+    Answer --> User : author
+
+    Vote --> VoteType
+    Vote --> User : by
+
+    Comment --> User : by
+
+    Question ..|> Votable : implements
+    Question ..|> Commentable : implements
+    Answer ..|> Votable : implements
+    Answer ..|> Commentable : implements
+
+    DefaultReputationStrategy ..|> ReputationStrategy : implements
+    GenerousReputationStrategy ..|> ReputationStrategy : implements
+
+    KeywordSearchStrategy ..|> SearchStrategy : implements
+    TagSearchStrategy ..|> SearchStrategy : implements
+    UserSearchStrategy ..|> SearchStrategy : implements
+    CompositeSearchStrategy ..|> SearchStrategy : implements
+    CompositeSearchStrategy o-- SearchStrategy : contains
+
+    ConsoleNotificationObserver ..|> NotificationObserver : implements
+    EmailNotificationObserver ..|> NotificationObserver : implements
+
+    StackOverflowSystem --> User : manages
+    StackOverflowSystem --> Question : manages
+    StackOverflowSystem --> Answer : manages
+    StackOverflowSystem --> Tag : manages
+    StackOverflowSystem --> ReputationStrategy : uses
+    StackOverflowSystem --> NotificationObserver : notifies
+
+    %% Notes
+    note for StackOverflowSystem "Singleton Pattern: Thread-safe\nwith double-checked locking"
+    note for ReputationStrategy "Strategy Pattern: Pluggable\nreputation calculation"
+    note for SearchStrategy "Strategy Pattern: Flexible\nsearch algorithms"
+    note for NotificationObserver "Observer Pattern: Event\nnotification system"
+

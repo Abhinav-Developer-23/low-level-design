@@ -1,12 +1,15 @@
 package org.example.model;
 
+import org.example.interfaces.Commentable;
+import org.example.interfaces.Votable;
+
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Answer {
+public class Answer implements Votable, Commentable {
     private final String answerId;
     private final User author;
     private String content;
@@ -44,6 +47,8 @@ public class Answer {
         this.isAccepted = false;
     }
 
+    // Votable interface implementation
+    @Override
     public Vote addVote(Vote vote) {
         Vote existingVote = votes.get(vote.getUser().getUserId());
         
@@ -64,6 +69,7 @@ public class Answer {
         }
     }
 
+    @Override
     public boolean removeVote(String userId) {
         Vote vote = votes.remove(userId);
         if (vote != null) {
@@ -73,8 +79,20 @@ public class Answer {
         return false;
     }
 
+    @Override
+    public int getVoteCount() {
+        return voteCount.get();
+    }
+
+    // Commentable interface implementation
+    @Override
     public void addComment(Comment comment) {
         comments.add(comment);
+    }
+
+    @Override
+    public List<Comment> getComments() {
+        return new ArrayList<>(comments);
     }
 
     // Getters
@@ -98,20 +116,12 @@ public class Answer {
         return isAccepted;
     }
 
-    public int getVoteCount() {
-        return voteCount.get();
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
-    }
-
-    public List<Comment> getComments() {
-        return new ArrayList<>(comments);
     }
 
     public Map<String, Vote> getVotes() {

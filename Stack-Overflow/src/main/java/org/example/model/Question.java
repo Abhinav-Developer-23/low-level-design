@@ -1,6 +1,8 @@
 package org.example.model;
 
 import org.example.enums.QuestionStatus;
+import org.example.interfaces.Commentable;
+import org.example.interfaces.Votable;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -8,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Question {
+public class Question implements Votable, Commentable {
     private final String questionId;
     private final User author;
     private String title;
@@ -53,6 +55,8 @@ public class Question {
         viewCount.incrementAndGet();
     }
 
+    // Votable interface implementation
+    @Override
     public Vote addVote(Vote vote) {
         Vote existingVote = votes.get(vote.getUser().getUserId());
         
@@ -73,6 +77,7 @@ public class Question {
         }
     }
 
+    @Override
     public boolean removeVote(String userId) {
         Vote vote = votes.remove(userId);
         if (vote != null) {
@@ -82,12 +87,25 @@ public class Question {
         return false;
     }
 
-    public void addAnswer(Answer answer) {
-        answers.add(answer);
+    @Override
+    public int getVoteCount() {
+        return voteCount.get();
     }
 
+    // Commentable interface implementation
+    @Override
     public void addComment(Comment comment) {
         comments.add(comment);
+    }
+
+    @Override
+    public List<Comment> getComments() {
+        return new ArrayList<>(comments);
+    }
+
+    // Other methods
+    public void addAnswer(Answer answer) {
+        answers.add(answer);
     }
 
     public void addTag(Tag tag) {
@@ -121,10 +139,6 @@ public class Question {
         return status;
     }
 
-    public int getVoteCount() {
-        return voteCount.get();
-    }
-
     public int getViewCount() {
         return viewCount.get();
     }
@@ -143,10 +157,6 @@ public class Question {
 
     public List<Answer> getAnswers() {
         return new ArrayList<>(answers);
-    }
-
-    public List<Comment> getComments() {
-        return new ArrayList<>(comments);
     }
 
     public Map<String, Vote> getVotes() {

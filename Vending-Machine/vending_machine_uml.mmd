@@ -1,0 +1,212 @@
+classDiagram
+    class VendingMachineSystem {
+        -instance: VendingMachineSystem
+        -products: Map~String, Product~
+        -activeTransactions: Map~String, Transaction~
+        -observers: List~VendingMachineObserver~
+        -currentState: MachineState
+        -coinInventory: Map~CoinType, Integer~
+        -paymentStrategy: PaymentStrategy
+        -selectionStrategy: ProductSelectionStrategy
+        +getInstance(): VendingMachineSystem
+        +selectProduct(productCode: String): Transaction
+        +insertCoin(transaction: Transaction, coin: Coin): void
+        +cancelTransaction(transaction: Transaction): void
+        +addProduct(product: Product): void
+        +restockProduct(productId: String, quantity: int): void
+        +registerObserver(observer: VendingMachineObserver): void
+        +setPaymentStrategy(strategy: PaymentStrategy): void
+        +setSelectionStrategy(strategy: ProductSelectionStrategy): void
+        +displayStatus(): void
+    }
+
+    class Product {
+        -productId: String
+        -name: String
+        -type: ProductType
+        -price: double
+        -quantity: AtomicInteger
+        -expirationDate: LocalDateTime
+        +dispense(): boolean
+        +isAvailable(): boolean
+        +restock(amount: int): void
+        +isExpired(): boolean
+    }
+
+    class Transaction {
+        -transactionId: String
+        -product: Product
+        -paymentMethod: PaymentMethod
+        -insertedCoins: List~Coin~
+        -status: TransactionStatus
+        -amountPaid: double
+        -changeCoins: List~Coin~
+        +addCoin(coin: Coin): void
+        +setStatus(status: TransactionStatus): void
+        +setChangeCoins(changeCoins: List~Coin~): void
+        +getAmountPaid(): double
+        +getRequiredAmount(): double
+        +getChangeAmount(): double
+        +isComplete(): boolean
+    }
+
+    class Coin {
+        -type: CoinType
+        -value: int
+        +getType(): CoinType
+        +getValue(): int
+    }
+
+    class VendingItem {
+        <<abstract>>
+        #id: String
+        #name: String
+        #price: double
+        #createdAt: LocalDateTime
+        #updatedAt: LocalDateTime
+        +isValidForPurchase(): boolean
+        +getId(): String
+        +getName(): String
+        +getPrice(): double
+        #isInStock(): boolean*
+        #isExpired(): boolean*
+        #isPriceValid(): boolean
+        #getQuantity(): int*
+        #dispense(): boolean*
+    }
+
+    class PaymentStrategy {
+        <<interface>>
+        +processPayment(transaction: Transaction): boolean
+        +processRefund(transaction: Transaction): boolean
+    }
+
+    class CoinPaymentStrategy {
+        +processPayment(transaction: Transaction): boolean
+        +processRefund(transaction: Transaction): boolean
+        -calculateChange(changeAmount: double): List~Coin~
+    }
+
+    class CardPaymentStrategy {
+        +processPayment(transaction: Transaction): boolean
+        +processRefund(transaction: Transaction): boolean
+        +validateCard(cardNumber: String, expiryDate: String, cvv: String): boolean
+    }
+
+    class ProductSelectionStrategy {
+        <<interface>>
+        +selectProduct(products: List~Product~, criteria: String): Product
+    }
+
+    class BasicProductSelectionStrategy {
+        +selectProduct(products: List~Product~, criteria: String): Product
+    }
+
+    class NameBasedSelectionStrategy {
+        +selectProduct(products: List~Product~, criteria: String): Product
+        +selectProducts(products: List~Product~, criteria: String): List~Product~
+    }
+
+    class VendingMachineObserver {
+        <<interface>>
+        +onProductDispensed(product: Product, transaction: Transaction): void
+        +onPaymentReceived(transaction: Transaction): void
+        +onTransactionFailed(transaction: Transaction, reason: String): void
+        +onRefundProcessed(transaction: Transaction, amount: double): void
+    }
+
+    class ConsoleVendingObserver {
+        -observerId: String
+        +ConsoleVendingObserver(observerId: String)
+        +onProductDispensed(product: Product, transaction: Transaction): void
+        +onPaymentReceived(transaction: Transaction): void
+        +onTransactionFailed(transaction: Transaction, reason: String): void
+        +onRefundProcessed(transaction: Transaction, amount: double): void
+        +getObserverId(): String
+    }
+
+    class MaintenanceObserver {
+        -totalTransactions: AtomicInteger
+        -failedTransactions: AtomicInteger
+        -lowInventoryAlerts: AtomicInteger
+        +onProductDispensed(product: Product, transaction: Transaction): void
+        +onPaymentReceived(transaction: Transaction): void
+        +onTransactionFailed(transaction: Transaction, reason: String): void
+        +onRefundProcessed(transaction: Transaction, amount: double): void
+        +getTotalTransactions(): int
+        +getFailedTransactions(): int
+        +getFailureRate(): double
+        +getLowInventoryAlerts(): int
+    }
+
+    class Dispensable {
+        <<interface>>
+        +dispense(): boolean
+        +isAvailable(): boolean
+        +getName(): String
+    }
+
+    %% Enums
+    class MachineState {
+        <<enumeration>>
+        IDLE
+        SELECTING
+        PAYING
+        DISPENSING
+        REFUNDING
+        OUT_OF_ORDER
+    }
+
+    class ProductType {
+        <<enumeration>>
+        SNACK
+        BEVERAGE
+        CANDY
+    }
+
+    class CoinType {
+        <<enumeration>>
+        ONE
+        FIVE
+        TEN
+        TWENTY_FIVE
+    }
+
+    class PaymentMethod {
+        <<enumeration>>
+        COINS
+        CARD
+        DIGITAL_WALLET
+    }
+
+    class TransactionStatus {
+        <<enumeration>>
+        PENDING
+        PROCESSING
+        COMPLETED
+        FAILED
+        REFUNDED
+    }
+
+    %% Relationships
+    VendingMachineSystem ||--o{ Product : manages
+    VendingMachineSystem ||--o{ Transaction : manages
+    VendingMachineSystem ||--o{ VendingMachineObserver : notifies
+    VendingMachineSystem --> PaymentStrategy : uses
+    VendingMachineSystem --> ProductSelectionStrategy : uses
+
+    Product ..|> Dispensable : implements
+    Product ..|> VendingItem : extends
+
+    VendingItem <|-- Product : extends
+
+    Transaction *-- Coin : contains
+
+    PaymentStrategy <|.. CoinPaymentStrategy : implements
+    PaymentStrategy <|.. CardPaymentStrategy : implements
+
+    ProductSelectionStrategy <|.. BasicProductSelectionStrategy : implements
+    ProductSelectionStrategy <|.. NameBasedSelectionStrategy : implements
+
+    VendingMachineObserver <|.. ConsoleVendingObserver : implements
+    VendingMachineObserver <|.. MaintenanceObserver : implements

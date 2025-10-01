@@ -3,6 +3,8 @@ package org.example;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import org.example.model.ParkingSpot;
+import org.example.interfaces.ParkingStrategy;
 
 /**
  * Concrete strategy that randomly selects an available parking spot.

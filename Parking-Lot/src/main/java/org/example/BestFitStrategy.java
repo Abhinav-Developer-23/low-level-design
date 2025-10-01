@@ -3,6 +3,8 @@ package org.example;
 import java.util.List;
 import java.util.Optional;
 import java.util.Comparator;
+import org.example.model.ParkingSpot;
+import org.example.interfaces.ParkingStrategy;
 
 /**
  * Concrete strategy that finds the best fit parking spot (smallest available spot that can fit the vehicle).

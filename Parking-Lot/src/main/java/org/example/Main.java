@@ -2,6 +2,11 @@ package org.example;
 
 import java.util.List;
 import java.util.Optional;
+import org.example.model.*;
+import org.example.interfaces.*;
+import org.example.BestFitStrategy;
+import org.example.NearestSpotStrategy;
+import org.example.RandomSpotStrategy;
 
 /**
  * Main demonstration class for the Parking Lot System.

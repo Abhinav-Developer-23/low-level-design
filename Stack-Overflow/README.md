@@ -46,7 +46,21 @@ Ensures only one instance of the system exists. Uses double-checked locking for 
 StackOverflowSystem system = StackOverflowSystem.getInstance();
 ```
 
-### 2. Strategy Pattern
+### 2. Template Method Pattern
+**Class:** `Post` (abstract base class)
+
+Defines the template for common post operations (voting, commenting) while allowing `Question` and `Answer` to provide specific implementations.
+
+```java
+public abstract class Post implements Votable, Commentable {
+    // Common voting and commenting logic
+}
+
+public class Question extends Post { /* Question-specific */ }
+public class Answer extends Post { /* Answer-specific */ }
+```
+
+### 3. Strategy Pattern
 **Interfaces:** `ReputationStrategy`, `SearchStrategy`
 
 **Implementations:**
@@ -60,7 +74,7 @@ system.setReputationStrategy(new GenerousReputationStrategy());
 List<Question> results = system.searchQuestions("java", new TagSearchStrategy());
 ```
 
-### 3. Observer Pattern
+### 4. Observer Pattern
 **Interface:** `NotificationObserver`
 
 **Implementations:** `ConsoleNotificationObserver`, `EmailNotificationObserver`
@@ -71,7 +85,7 @@ Notifies interested parties about system events (answers, votes, comments).
 system.registerObserver(new ConsoleNotificationObserver(user));
 ```
 
-### 4. Composite Pattern
+### 5. Composite Pattern
 **Class:** `CompositeSearchStrategy`
 
 Combines multiple search strategies to provide comprehensive search results.
@@ -149,9 +163,10 @@ Stack-Overflow/
 │   │   ├── SearchStrategy.java
 │   │   └── Votable.java
 │   ├── model/
-│   │   ├── Answer.java
+│   │   ├── Post.java (abstract base class) ⭐
+│   │   ├── Question.java (extends Post)
+│   │   ├── Answer.java (extends Post)
 │   │   ├── Comment.java
-│   │   ├── Question.java
 │   │   ├── Tag.java
 │   │   ├── User.java
 │   │   └── Vote.java
@@ -170,6 +185,10 @@ Stack-Overflow/
 │   ├── system/
 │   │   └── StackOverflowSystem.java
 │   └── Main.java
+├── README.md
+├── REFACTORING_SUMMARY.md
+├── INTERFACE_IMPLEMENTATION.md
+├── stack_overflow_uml.mmd
 └── pom.xml
 ```
 
@@ -245,12 +264,14 @@ mvn exec:java -Dexec.mainClass="org.example.Main"
 
 ## Key Design Decisions
 
-1. **Immutability where possible:** User IDs, question IDs, etc. are final
-2. **Defensive copying:** Collections returned from getters are copies, not direct references
-3. **Thread safety first:** All shared data structures are thread-safe
-4. **Extensibility:** Easy to add new strategies, observers, and features
-5. **Separation of concerns:** Clear boundaries between different components
-6. **Testability:** Dependencies are injected through interfaces
+1. **Inheritance over duplication:** `Question` and `Answer` extend abstract `Post` class
+2. **Simplified voting:** AtomicInteger-based upvote/downvote tracking with VoteType enums
+3. **Immutability where possible:** User IDs, question IDs, etc. are final
+4. **Defensive copying:** Collections returned from getters are copies, not direct references
+5. **Thread safety first:** All shared data structures are thread-safe
+6. **Extensibility:** Easy to add new strategies, observers, and post types
+7. **Separation of concerns:** Clear boundaries between different components
+8. **Testability:** Dependencies are injected through interfaces
 
 ## Future Enhancements
 

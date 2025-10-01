@@ -203,12 +203,20 @@ public class StackOverflowSystem {
         String voteId = "V" + voteIdCounter.incrementAndGet();
         Vote vote = new Vote(voteId, voter, voteType);
         
-        Vote existingVote = question.addVote(vote);
+        VoteType previousVote = question.getUserVote(voter.getUserId());
+        question.addVote(vote);
         
-        // Only award reputation for new votes or vote changes
-        if (existingVote == vote || (existingVote != null && existingVote.getVoteType() != voteType)) {
-            int reputation = reputationStrategy.calculateQuestionVoteReputation(voteType);
-            question.getAuthor().addReputation(reputation);
+        // Award/deduct reputation based on vote change
+        if (previousVote != voteType) {
+            // Remove old reputation if there was a previous vote
+            if (previousVote != null) {
+                int oldReputation = reputationStrategy.calculateQuestionVoteReputation(previousVote);
+                question.getAuthor().addReputation(-oldReputation);
+            }
+            
+            // Add new reputation
+            int newReputation = reputationStrategy.calculateQuestionVoteReputation(voteType);
+            question.getAuthor().addReputation(newReputation);
         }
         
         // Notify observers
@@ -219,12 +227,20 @@ public class StackOverflowSystem {
         String voteId = "V" + voteIdCounter.incrementAndGet();
         Vote vote = new Vote(voteId, voter, voteType);
         
-        Vote existingVote = answer.addVote(vote);
+        VoteType previousVote = answer.getUserVote(voter.getUserId());
+        answer.addVote(vote);
         
-        // Only award reputation for new votes or vote changes
-        if (existingVote == vote || (existingVote != null && existingVote.getVoteType() != voteType)) {
-            int reputation = reputationStrategy.calculateAnswerVoteReputation(voteType);
-            answer.getAuthor().addReputation(reputation);
+        // Award/deduct reputation based on vote change
+        if (previousVote != voteType) {
+            // Remove old reputation if there was a previous vote
+            if (previousVote != null) {
+                int oldReputation = reputationStrategy.calculateAnswerVoteReputation(previousVote);
+                answer.getAuthor().addReputation(-oldReputation);
+            }
+            
+            // Add new reputation
+            int newReputation = reputationStrategy.calculateAnswerVoteReputation(voteType);
+            answer.getAuthor().addReputation(newReputation);
         }
         
         // Notify observers

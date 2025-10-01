@@ -1,5 +1,26 @@
 classDiagram
     %% Core Model Classes
+    class Post {
+        <<abstract>>
+        #String id
+        #User author
+        #String content
+        #LocalDateTime createdAt
+        #LocalDateTime updatedAt
+        #Map~String,VoteType~ userVotes
+        #AtomicInteger upvotes
+        #AtomicInteger downvotes
+        #List~Comment~ comments
+        +addVote(Vote) Vote
+        +removeVote(String) boolean
+        +getVoteCount() int
+        +getUpvotes() int
+        +getDownvotes() int
+        +addComment(Comment)
+        +getComments() List~Comment~
+        +updateContent(String)
+    }
+
     class User {
         -String userId
         -String username
@@ -17,39 +38,24 @@ classDiagram
     }
 
     class Question {
-        -String questionId
-        -User author
         -String title
-        -String content
         -QuestionStatus status
-        -AtomicInteger voteCount
         -AtomicInteger viewCount
-        -LocalDateTime createdAt
         -Set~Tag~ tags
-        -Map~String,Vote~ votes
         -List~Answer~ answers
-        -List~Comment~ comments
-        +updateContent(String, String)
-        +addVote(Vote)
-        +addAnswer(Answer)
-        +addComment(Comment)
+        +updateQuestion(String, String)
+        +updateStatus(QuestionStatus)
         +incrementViewCount()
+        +addAnswer(Answer)
+        +addTag(Tag)
+        +getAcceptedAnswer() Optional~Answer~
     }
 
     class Answer {
-        -String answerId
-        -User author
-        -String content
         -Question question
         -boolean isAccepted
-        -AtomicInteger voteCount
-        -LocalDateTime createdAt
-        -Map~String,Vote~ votes
-        -List~Comment~ comments
-        +updateContent(String)
         +markAsAccepted()
-        +addVote(Vote)
-        +addComment(Comment)
+        +unmarkAsAccepted()
     }
 
     class Comment {
@@ -211,27 +217,23 @@ classDiagram
     User "1" --> "*" Comment : writes
     User --> UserRole
 
-    Question "1" --> "*" Answer : has
-    Question "1" --> "*" Comment : has
-    Question "*" --> "*" Tag : tagged with
-    Question "1" --> "*" Vote : has
-    Question --> QuestionStatus
-    Question --> User : author
+    Post ..|> Votable : implements
+    Post ..|> Commentable : implements
+    Post --> User : author
+    Post "1" --> "*" Comment : has
 
-    Answer "1" --> "*" Comment : has
-    Answer "1" --> "*" Vote : has
+    Question --|> Post : extends
+    Question "1" --> "*" Answer : has
+    Question "*" --> "*" Tag : tagged with
+    Question --> QuestionStatus
+
+    Answer --|> Post : extends
     Answer --> Question : answers
-    Answer --> User : author
 
     Vote --> VoteType
     Vote --> User : by
 
     Comment --> User : by
-
-    Question ..|> Votable : implements
-    Question ..|> Commentable : implements
-    Answer ..|> Votable : implements
-    Answer ..|> Commentable : implements
 
     DefaultReputationStrategy ..|> ReputationStrategy : implements
     GenerousReputationStrategy ..|> ReputationStrategy : implements
@@ -253,6 +255,7 @@ classDiagram
     StackOverflowSystem --> NotificationObserver : notifies
 
     %% Notes
+    note for Post "Template Method Pattern:\nBase class for Question and Answer\nSimplified voting with enums"
     note for StackOverflowSystem "Singleton Pattern: Thread-safe\nwith double-checked locking"
     note for ReputationStrategy "Strategy Pattern: Pluggable\nreputation calculation"
     note for SearchStrategy "Strategy Pattern: Flexible\nsearch algorithms"

@@ -1,50 +1,30 @@
 package org.example.model;
 
 import org.example.enums.QuestionStatus;
-import org.example.interfaces.Commentable;
-import org.example.interfaces.Votable;
 
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Question implements Votable, Commentable {
-    private final String questionId;
-    private final User author;
+public class Question extends Post {
     private String title;
-    private String content;
     private QuestionStatus status;
-    private final AtomicInteger voteCount;
     private final AtomicInteger viewCount;
-    private final LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     private final Set<Tag> tags;
-    private final Map<String, Vote> votes; // userId -> Vote
     private final List<Answer> answers;
-    private final List<Comment> comments;
 
     public Question(String questionId, User author, String title, String content, Set<Tag> tags) {
-        this.questionId = questionId;
-        this.author = author;
+        super(questionId, author, content);
         this.title = title;
-        this.content = content;
         this.status = QuestionStatus.OPEN;
-        this.voteCount = new AtomicInteger(0);
         this.viewCount = new AtomicInteger(0);
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
         this.tags = new HashSet<>(tags);
-        this.votes = new ConcurrentHashMap<>();
         this.answers = new CopyOnWriteArrayList<>();
-        this.comments = new CopyOnWriteArrayList<>();
     }
 
-    public synchronized void updateContent(String newTitle, String newContent) {
+    public synchronized void updateQuestion(String newTitle, String newContent) {
         this.title = newTitle;
-        this.content = newContent;
-        this.updatedAt = LocalDateTime.now();
+        updateContent(newContent);
     }
 
     public synchronized void updateStatus(QuestionStatus newStatus) {
@@ -55,55 +35,6 @@ public class Question implements Votable, Commentable {
         viewCount.incrementAndGet();
     }
 
-    // Votable interface implementation
-    @Override
-    public Vote addVote(Vote vote) {
-        Vote existingVote = votes.get(vote.getUser().getUserId());
-        
-        if (existingVote != null) {
-            // User already voted, calculate the difference
-            int oldValue = existingVote.getVoteType().getValue();
-            int newValue = vote.getVoteType().getValue();
-            
-            if (oldValue != newValue) {
-                existingVote.changeVote(vote.getVoteType());
-                voteCount.addAndGet(newValue - oldValue);
-            }
-            return existingVote;
-        } else {
-            votes.put(vote.getUser().getUserId(), vote);
-            voteCount.addAndGet(vote.getVoteType().getValue());
-            return vote;
-        }
-    }
-
-    @Override
-    public boolean removeVote(String userId) {
-        Vote vote = votes.remove(userId);
-        if (vote != null) {
-            voteCount.addAndGet(-vote.getVoteType().getValue());
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public int getVoteCount() {
-        return voteCount.get();
-    }
-
-    // Commentable interface implementation
-    @Override
-    public void addComment(Comment comment) {
-        comments.add(comment);
-    }
-
-    @Override
-    public List<Comment> getComments() {
-        return new ArrayList<>(comments);
-    }
-
-    // Other methods
     public void addAnswer(Answer answer) {
         answers.add(answer);
     }
@@ -120,19 +51,11 @@ public class Question implements Votable, Commentable {
 
     // Getters
     public String getQuestionId() {
-        return questionId;
-    }
-
-    public User getAuthor() {
-        return author;
+        return id;
     }
 
     public String getTitle() {
         return title;
-    }
-
-    public String getContent() {
-        return content;
     }
 
     public QuestionStatus getStatus() {
@@ -143,14 +66,6 @@ public class Question implements Votable, Commentable {
         return viewCount.get();
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
     public Set<Tag> getTags() {
         return new HashSet<>(tags);
     }
@@ -159,21 +74,17 @@ public class Question implements Votable, Commentable {
         return new ArrayList<>(answers);
     }
 
-    public Map<String, Vote> getVotes() {
-        return new HashMap<>(votes);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Question question = (Question) o;
-        return Objects.equals(questionId, question.questionId);
+        return Objects.equals(id, question.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(questionId);
+        return Objects.hash(id);
     }
 
     @Override
@@ -181,11 +92,10 @@ public class Question implements Votable, Commentable {
         return "Question{" +
                 "title='" + title + '\'' +
                 ", author=" + author.getUsername() +
-                ", votes=" + voteCount.get() +
+                ", votes=" + getVoteCount() +
                 ", answers=" + answers.size() +
                 ", views=" + viewCount.get() +
                 ", status=" + status +
                 '}';
     }
 }
-

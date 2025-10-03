@@ -1,11 +1,31 @@
 package org.example.enums;
 
 /**
- * Enumeration for different payment methods supported by the vending machine.
- * Used in Strategy Pattern for payment processing.
+ * Represents different payment methods supported by the vending machine.
  */
 public enum PaymentMethod {
-    CASH,       // Coin-based payment
-    CARD,       // Credit/debit card payment
-    MOBILE      // Mobile wallet payment
+    CASH("Cash/Coins"),
+    CARD("Credit/Debit Card"),
+    MOBILE("Mobile Payment");
+
+    private final String description;
+
+    PaymentMethod(String description) {
+        this.description = description;
+    }
+
+    /**
+     * Gets a human-readable description of the payment method.
+     * 
+     * @return the payment method description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public String toString() {
+        return description;
+    }
 }
+

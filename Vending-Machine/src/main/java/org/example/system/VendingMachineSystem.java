@@ -1,236 +1,199 @@
 package org.example.system;
 
-import org.example.enums.CoinType;
-import org.example.enums.MachineState;
 import org.example.enums.PaymentMethod;
 import org.example.enums.ProductType;
-import org.example.interfaces.ProductSelectionStrategy;
+import org.example.interfaces.VendingMachineObserver;
 import org.example.model.Product;
-import org.example.observers.MaintenanceObserver;
-import org.example.strategies.selection.NameBasedSelectionStrategy;
-
-import java.util.Map;
+import org.example.states.OutOfServiceState;
+import org.example.strategies.payment.*;
+import org.example.strategies.selection.*;
 
 /**
- * Vending Machine System: Facade class providing high-level API.
- * Simplifies interaction with the complex vending machine system.
+ * VendingMachineSystem is a Facade that provides a simplified interface
+ * to the complex vending machine system.
+ * Follows Facade Pattern and provides high-level operations.
  */
 public class VendingMachineSystem {
     private final VendingMachineContext context;
-    private final NameBasedSelectionStrategy nameBasedStrategy;
 
+    /**
+     * Creates a new VendingMachineSystem with a pre-populated inventory.
+     */
     public VendingMachineSystem() {
         this.context = new VendingMachineContext();
-        this.nameBasedStrategy = new NameBasedSelectionStrategy();
+        initializeInventory();
     }
 
     /**
-     * Displays all available products in the vending machine.
+     * Initializes the inventory with default products.
+     */
+    private void initializeInventory() {
+        // Add products to inventory (SlotID, ProductType, Quantity)
+        context.getInventory().addProduct("A1", ProductType.CHIPS, 10);
+        context.getInventory().addProduct("A2", ProductType.CHOCOLATE, 8);
+        context.getInventory().addProduct("A3", ProductType.SODA, 12);
+        context.getInventory().addProduct("B1", ProductType.CANDY, 15);
+        context.getInventory().addProduct("B2", ProductType.GUM, 20);
+        context.getInventory().addProduct("B3", ProductType.WATER, 10);
+        context.getInventory().addProduct("C1", ProductType.CHIPS, 5);
+        context.getInventory().addProduct("C2", ProductType.CHOCOLATE, 3); // Low stock
+        context.getInventory().addProduct("C3", ProductType.SODA, 7);
+        
+        System.out.println("Inventory initialized with products.");
+    }
+
+    /**
+     * Displays the current inventory.
      */
     public void displayInventory() {
-        System.out.println("\n=== VENDING MACHINE INVENTORY ===");
-        Map<String, Product> available = context.getInventory().getAvailableProducts();
-
-        if (available.isEmpty()) {
-            System.out.println("No products available");
-            return;
-        }
-
-        // Group by product type
-        for (ProductType type : ProductType.values()) {
-            boolean hasProducts = available.values().stream()
-                    .anyMatch(p -> p.getProductType() == type);
-
-            if (hasProducts) {
-                System.out.println("\n" + type + ":");
-                available.entrySet().stream()
-                        .filter(entry -> entry.getValue().getProductType() == type)
-                        .forEach(entry -> {
-                            String slotId = entry.getKey();
-                            Product product = entry.getValue();
-                            int stock = context.getInventory().getStockLevel(slotId);
-                            System.out.println(String.format("  %s: %s - %s (Stock: %d)",
-                                                          slotId,
-                                                          product.getName(),
-                                                          product.getFormattedPrice(),
-                                                          stock));
-                        });
-            }
-        }
-        System.out.println();
+        context.displayInventory();
     }
 
     /**
-     * Selects a product by slot ID (e.g., "A1", "B2").
-     * @param slotId The slot identifier
+     * Selects a product by its slot ID.
+     * 
+     * @param slotId the slot ID (e.g., "A1")
      */
     public void selectProductBySlot(String slotId) {
-        System.out.println("Selecting product from slot: " + slotId);
+        // Use basic slot ID selection
+        context.setProductSelectionStrategy(new BasicProductSelectionStrategy());
         context.selectProduct(slotId);
     }
 
     /**
-     * Selects a product by name or type.
-     * @param nameOrType Product name or type (e.g., "coke", "beverage")
+     * Selects a product by its name or type.
+     * 
+     * @param productName the product name (e.g., "chocolate")
      */
-    public void selectProductByName(String nameOrType) {
-        System.out.println("Searching for product: " + nameOrType);
-        context.setSelectionStrategy(nameBasedStrategy);
-        String slotId = nameBasedStrategy.selectProduct(context.getInventory(), nameOrType);
-
-        if (slotId != null) {
-            context.selectProduct(slotId);
+    public void selectProductByName(String productName) {
+        // Use name-based selection
+        context.setProductSelectionStrategy(new NameBasedSelectionStrategy());
+        Product product = context.getProductSelectionStrategy()
+            .selectProduct(context.getInventory().getAllProducts(), productName);
+        
+        if (product != null) {
+            context.selectProduct(product.getId());
         } else {
-            System.out.println("Product not found: " + nameOrType);
-            // Reset to default strategy
-            context.setSelectionStrategy(new org.example.strategies.selection.BasicProductSelectionStrategy());
+            System.out.println("ERROR: No product found matching '" + productName + "'");
         }
     }
 
     /**
-     * Inserts a coin into the vending machine.
-     * @param coinType The type of coin to insert
+     * Inserts a coin into the machine.
+     * 
+     * @param coinValue the coin value in cents
      */
-    public void insertCoin(CoinType coinType) {
-        System.out.println("Inserting " + coinType.toString());
-        context.insertCoin(coinType);
+    public void insertCoin(int coinValue) {
+        context.insertCoin(coinValue);
     }
 
     /**
-     * Sets the payment method for the transaction.
-     * @param paymentMethod The payment method to use
+     * Sets the payment method.
+     * 
+     * @param paymentMethod the payment method to use
      */
     public void setPaymentMethod(PaymentMethod paymentMethod) {
-        System.out.println("Setting payment method to: " + paymentMethod);
-        context.setPaymentMethod(paymentMethod);
+        switch (paymentMethod) {
+            case CASH:
+                context.setPaymentStrategy(new CashPaymentStrategy());
+                break;
+            case CARD:
+                context.setPaymentStrategy(new CardPaymentStrategy());
+                break;
+            case MOBILE:
+                context.setPaymentStrategy(new MobilePaymentStrategy());
+                break;
+        }
     }
 
     /**
-     * Processes the payment for the selected product.
-     * @return true if payment was successful
+     * Processes the payment for the current transaction.
      */
-    public boolean processPayment() {
-        System.out.println("Processing payment...");
-        return context.processPayment();
+    public void processPayment() {
+        context.processPayment();
     }
 
     /**
      * Cancels the current transaction.
      */
     public void cancelTransaction() {
-        System.out.println("Cancelling transaction...");
         context.cancelTransaction();
     }
 
     /**
-     * Sets the machine to service/maintenance mode.
-     * @param inService true to enter service mode, false to exit
+     * Gets the current machine status.
+     * 
+     * @return the machine status string
      */
-    public void setServiceMode(boolean inService) {
-        String mode = inService ? "maintenance" : "normal operation";
-        System.out.println("Setting machine to " + mode + " mode");
-        context.setServiceMode(inService);
+    public String getMachineStatus() {
+        return context.getMachineStatus();
     }
 
     /**
-     * Gets the current machine state.
-     * @return Current machine state
+     * Adds an observer to the vending machine.
+     * 
+     * @param observer the observer to add
      */
-    public MachineState getCurrentState() {
-        return context.getCurrentMachineState();
+    public void addObserver(VendingMachineObserver observer) {
+        context.addObserver(observer);
     }
 
     /**
-     * Checks if the machine is currently out of service.
-     * @return true if machine is in maintenance mode
+     * Gets the context (for advanced operations).
+     * 
+     * @return the vending machine context
      */
-    public boolean isOutOfService() {
-        return context.isOutOfService();
+    public VendingMachineContext getContext() {
+        return context;
     }
 
     /**
-     * Gets the current transaction details.
-     * @return Current transaction, or null if no active transaction
+     * Puts the machine into maintenance mode.
      */
-    public org.example.model.Transaction getCurrentTransaction() {
-        return context.getCurrentTransaction();
-    }
-
-    /**
-     * Gets a maintenance report from the maintenance observer.
-     * @return Formatted maintenance report
-     */
-    public String getMaintenanceReport() {
-        MaintenanceObserver maintenanceObserver = context.getObservers().stream()
-                .filter(obs -> obs instanceof MaintenanceObserver)
-                .map(obs -> (MaintenanceObserver) obs)
-                .findFirst()
-                .orElse(null);
-
-        if (maintenanceObserver != null) {
-            return maintenanceObserver.generateMaintenanceReport();
+    public void performMaintenance() {
+        System.out.println("\n=== MAINTENANCE MODE ===");
+        context.setOperational(false);
+        context.setCurrentState(new OutOfServiceState(context));
+        
+        // Display inventory status
+        System.out.println("\nCurrent Inventory Status:");
+        context.displayInventory();
+        
+        // Display low stock items
+        var lowStock = context.getInventory().getLowStockProducts();
+        if (!lowStock.isEmpty()) {
+            System.out.println("\n[WARNING] LOW STOCK ITEMS:");
+            lowStock.values().forEach(p -> 
+                System.out.println("  - " + p.toString())
+            );
         }
-        return "Maintenance observer not found";
+        
+        System.out.println("\nMaintenance complete. Call returnToService() to resume operations.");
     }
 
     /**
-     * Restocks a product in the inventory.
-     * @param slotId The slot to restock
-     * @param quantity The quantity to add
+     * Returns the machine to service from maintenance mode.
+     */
+    public void returnToService() {
+        if (context.getCurrentState() instanceof OutOfServiceState) {
+            ((OutOfServiceState) context.getCurrentState()).returnToService();
+        } else {
+            System.out.println("Machine is not in maintenance mode.");
+        }
+    }
+
+    /**
+     * Restocks a product.
+     * 
+     * @param slotId the slot ID
+     * @param quantity the quantity to add
      */
     public void restockProduct(String slotId, int quantity) {
-        System.out.println("Restocking " + slotId + " with " + quantity + " items");
-        context.getInventory().restockProduct(slotId, quantity);
-    }
-
-    /**
-     * Shows help information about available commands.
-     */
-    public void showHelp() {
-        System.out.println("\n=== VENDING MACHINE HELP ===");
-        System.out.println("Available commands:");
-        System.out.println("  displayInventory()     - Show all available products");
-        System.out.println("  selectProductBySlot(id) - Select product by slot (e.g., 'A1')");
-        System.out.println("  selectProductByName(name) - Select product by name (e.g., 'coke')");
-        System.out.println("  insertCoin(CoinType)   - Insert a coin");
-        System.out.println("  setPaymentMethod(method) - Set payment method");
-        System.out.println("  processPayment()        - Process the payment");
-        System.out.println("  cancelTransaction()     - Cancel current transaction");
-        System.out.println("  getCurrentState()       - Get current machine state");
-        System.out.println("  getMaintenanceReport()  - Get maintenance status");
-        System.out.println();
-        System.out.println("Coin types: PENNY, NICKEL, DIME, QUARTER, HALF_DOLLAR, DOLLAR");
-        System.out.println("Payment methods: CASH, CARD, MOBILE");
-        System.out.println();
-    }
-
-    /**
-     * Performs a complete purchase flow demonstration.
-     */
-    public void demonstratePurchaseFlow() {
-        System.out.println("\n=== PURCHASE FLOW DEMONSTRATION ===");
-
-        // Display inventory
-        displayInventory();
-
-        // Select product
-        System.out.println("Step 1: Selecting product...");
-        selectProductBySlot("A1");
-
-        // Insert coins
-        System.out.println("Step 2: Inserting coins...");
-        insertCoin(CoinType.QUARTER);
-        insertCoin(CoinType.QUARTER);
-        insertCoin(CoinType.QUARTER);
-        insertCoin(CoinType.QUARTER);
-        insertCoin(CoinType.QUARTER);
-
-        // Process payment
-        System.out.println("Step 3: Processing payment...");
-        if (processPayment()) {
-            System.out.println("Purchase completed successfully!");
+        if (context.getInventory().restockProduct(slotId, quantity)) {
+            System.out.println("Restocked " + slotId + " with " + quantity + " items.");
         } else {
-            System.out.println("Purchase failed!");
+            System.out.println("ERROR: Could not restock " + slotId + " (product not found).");
         }
     }
 }
+

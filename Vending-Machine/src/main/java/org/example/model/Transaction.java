@@ -2,189 +2,182 @@ package org.example.model;
 
 import org.example.enums.PaymentMethod;
 import org.example.enums.TransactionStatus;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Represents a transaction in the vending machine system.
- * Tracks the complete lifecycle of a purchase transaction.
+ * Represents a transaction in the vending machine.
+ * Tracks payment details, product information, and transaction status.
+ * Follows Single Responsibility Principle and encapsulation.
  */
 public class Transaction {
     private final String transactionId;
-    private final LocalDateTime startTime;
-    private LocalDateTime endTime;
-
+    private final LocalDateTime timestamp;
+    private final String productId;
+    private final int productPrice;
+    private final List<Coin> insertedCoins;
+    private final PaymentMethod paymentMethod;
     private TransactionStatus status;
-    private String selectedProductSlot;
-    private Product selectedProduct;
-    private PaymentMethod paymentMethod;
+    private int totalInsertedAmount;
 
-    private int amountPaid; // Total amount paid in cents
-    private int changeReturned; // Change returned in cents
-
-    private final List<Coin> coinsInserted;
-    private final List<String> events; // Audit trail of events
-
-    public Transaction() {
+    /**
+     * Creates a new Transaction instance.
+     * 
+     * @param productId the ID of the product being purchased
+     * @param productPrice the price of the product in cents
+     * @param paymentMethod the payment method to use
+     */
+    public Transaction(String productId, int productPrice, PaymentMethod paymentMethod) {
         this.transactionId = UUID.randomUUID().toString();
-        this.startTime = LocalDateTime.now();
-        this.status = TransactionStatus.INITIATED;
-        this.coinsInserted = new ArrayList<>();
-        this.events = new ArrayList<>();
-        this.amountPaid = 0;
-        this.changeReturned = 0;
-
-        addEvent("Transaction initiated");
+        this.timestamp = LocalDateTime.now();
+        this.productId = productId;
+        this.productPrice = productPrice;
+        this.paymentMethod = paymentMethod;
+        this.insertedCoins = new ArrayList<>();
+        this.status = TransactionStatus.PENDING;
+        this.totalInsertedAmount = 0;
     }
 
+    /**
+     * Gets the transaction ID.
+     * 
+     * @return the transaction ID
+     */
     public String getTransactionId() {
         return transactionId;
     }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
+    /**
+     * Gets the transaction timestamp.
+     * 
+     * @return the timestamp
+     */
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
-    public LocalDateTime getEndTime() {
-        return endTime;
+    /**
+     * Gets the product ID.
+     * 
+     * @return the product ID
+     */
+    public String getProductId() {
+        return productId;
     }
 
-    public TransactionStatus getStatus() {
-        return status;
+    /**
+     * Gets the product price in cents.
+     * 
+     * @return the product price
+     */
+    public int getProductPrice() {
+        return productPrice;
     }
 
-    public void setStatus(TransactionStatus status) {
-        this.status = status;
-        addEvent("Status changed to: " + status);
-        if (status == TransactionStatus.COMPLETED || status == TransactionStatus.CANCELLED) {
-            this.endTime = LocalDateTime.now();
-            addEvent("Transaction ended");
-        }
+    /**
+     * Gets the list of inserted coins.
+     * 
+     * @return list of coins
+     */
+    public List<Coin> getInsertedCoins() {
+        return new ArrayList<>(insertedCoins);
     }
 
-    public String getSelectedProductSlot() {
-        return selectedProductSlot;
-    }
-
-    public void setSelectedProductSlot(String selectedProductSlot) {
-        this.selectedProductSlot = selectedProductSlot;
-        addEvent("Product selected: " + selectedProductSlot);
-    }
-
-    public Product getSelectedProduct() {
-        return selectedProduct;
-    }
-
-    public void setSelectedProduct(Product selectedProduct) {
-        this.selectedProduct = selectedProduct;
-    }
-
+    /**
+     * Gets the payment method.
+     * 
+     * @return the payment method
+     */
     public PaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
-        addEvent("Payment method set to: " + paymentMethod);
+    /**
+     * Gets the current transaction status.
+     * 
+     * @return the status
+     */
+    public TransactionStatus getStatus() {
+        return status;
     }
 
-    public int getAmountPaid() {
-        return amountPaid;
+    /**
+     * Sets the transaction status.
+     * 
+     * @param status the new status
+     */
+    public void setStatus(TransactionStatus status) {
+        this.status = status;
     }
 
-    public void addPayment(int amount) {
-        this.amountPaid += amount;
-        addEvent("Payment added: " + amount + " cents");
+    /**
+     * Gets the total amount inserted in cents.
+     * 
+     * @return the total inserted amount
+     */
+    public int getTotalInsertedAmount() {
+        return totalInsertedAmount;
     }
 
-    public int getChangeReturned() {
-        return changeReturned;
-    }
-
-    public void setChangeReturned(int changeReturned) {
-        this.changeReturned = changeReturned;
-        addEvent("Change returned: " + changeReturned + " cents");
-    }
-
-    public List<Coin> getCoinsInserted() {
-        return Collections.unmodifiableList(coinsInserted);
-    }
-
+    /**
+     * Adds a coin to the transaction.
+     * 
+     * @param coin the coin to add
+     */
     public void addCoin(Coin coin) {
-        coinsInserted.add(coin);
-        addPayment(coin.getValue());
-    }
-
-    public List<String> getEvents() {
-        return Collections.unmodifiableList(events);
-    }
-
-    private void addEvent(String event) {
-        events.add(String.format("[%s] %s", LocalDateTime.now(), event));
+        insertedCoins.add(coin);
+        totalInsertedAmount += coin.getValue();
     }
 
     /**
-     * Calculates the total cost of the transaction.
-     * @return Cost in cents, or 0 if no product selected
+     * Checks if payment is complete (sufficient funds inserted).
+     * 
+     * @return true if payment is complete, false otherwise
      */
-    public int getTotalCost() {
-        return selectedProduct != null ? selectedProduct.getPrice() : 0;
+    public boolean isPaymentComplete() {
+        return totalInsertedAmount >= productPrice;
     }
 
     /**
-     * Checks if sufficient payment has been made.
-     * @return true if amount paid >= total cost
-     */
-    public boolean isPaymentSufficient() {
-        return amountPaid >= getTotalCost();
-    }
-
-    /**
-     * Calculates the change amount needed.
-     * @return Change in cents (amountPaid - totalCost), or 0 if insufficient payment
+     * Gets the change amount to be returned.
+     * 
+     * @return the change amount in cents (0 if payment not complete)
      */
     public int getChangeAmount() {
-        if (!isPaymentSufficient()) {
-            return 0;
+        if (totalInsertedAmount >= productPrice) {
+            return totalInsertedAmount - productPrice;
         }
-        return amountPaid - getTotalCost();
+        return 0;
     }
 
     /**
-     * Gets the transaction duration in seconds.
-     * @return Duration in seconds, or current duration if not completed
+     * Gets the remaining amount needed for payment.
+     * 
+     * @return the remaining amount in cents (0 if payment complete)
      */
-    public long getDurationSeconds() {
-        LocalDateTime end = endTime != null ? endTime : LocalDateTime.now();
-        return java.time.Duration.between(startTime, end).getSeconds();
+    public int getRemainingAmount() {
+        if (totalInsertedAmount < productPrice) {
+            return productPrice - totalInsertedAmount;
+        }
+        return 0;
+    }
+
+    /**
+     * Checks if the transaction needs a refund.
+     * 
+     * @return true if money was inserted, false otherwise
+     */
+    public boolean needsRefund() {
+        return totalInsertedAmount > 0;
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Transaction ID: ").append(transactionId).append("\n");
-        sb.append("Status: ").append(status).append("\n");
-        sb.append("Start Time: ").append(startTime).append("\n");
-        if (endTime != null) {
-            sb.append("End Time: ").append(endTime).append("\n");
-            sb.append("Duration: ").append(getDurationSeconds()).append(" seconds\n");
-        }
-        if (selectedProduct != null) {
-            sb.append("Product: ").append(selectedProduct.getName())
-              .append(" (").append(selectedProductSlot).append(")\n");
-            sb.append("Cost: ").append(selectedProduct.getFormattedPrice()).append("\n");
-        }
-        sb.append("Amount Paid: ").append(String.format("$%.2f", amountPaid / 100.0)).append("\n");
-        if (changeReturned > 0) {
-            sb.append("Change Returned: ").append(String.format("$%.2f", changeReturned / 100.0)).append("\n");
-        }
-        if (paymentMethod != null) {
-            sb.append("Payment Method: ").append(paymentMethod).append("\n");
-        }
-        return sb.toString();
+        return String.format("Transaction[ID=%s, Product=%s, Price=$%.2f, Inserted=$%.2f, Status=%s]",
+            transactionId.substring(0, 8), productId, 
+            productPrice / 100.0, totalInsertedAmount / 100.0, status);
     }
 }
+

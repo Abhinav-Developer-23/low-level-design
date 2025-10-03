@@ -1,330 +1,357 @@
 package org.example.system;
 
-import org.example.enums.CoinType;
-import org.example.enums.MachineState;
+import org.example.interfaces.State;
+import org.example.interfaces.PaymentStrategy;
+import org.example.interfaces.ProductSelectionStrategy;
+import org.example.interfaces.VendingMachineObserver;
+import org.example.model.Inventory;
+import org.example.model.Transaction;
+import org.example.model.Product;
 import org.example.enums.PaymentMethod;
-import org.example.enums.TransactionStatus;
-import org.example.interfaces.*;
-import org.example.model.*;
-import org.example.observers.ConsoleVendingObserver;
-import org.example.observers.MaintenanceObserver;
-import org.example.states.*;
+import org.example.enums.CoinType;
+import org.example.states.IdleState;
 import org.example.strategies.payment.CashPaymentStrategy;
-import org.example.strategies.payment.CardPaymentStrategy;
-import org.example.strategies.payment.MobilePaymentStrategy;
 import org.example.strategies.selection.BasicProductSelectionStrategy;
-import org.example.strategies.selection.NameBasedSelectionStrategy;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 /**
- * Vending Machine Context: Core context class implementing the State Pattern.
- * Manages the current state and coordinates all vending machine operations.
+ * VendingMachineContext is the context class for the State pattern.
+ * It maintains the current state and coordinates all components of the vending machine.
+ * Follows State Pattern, Strategy Pattern, and Observer Pattern.
+ * Also follows Single Responsibility and Dependency Inversion principles.
  */
 public class VendingMachineContext {
-    // State Pattern
     private State currentState;
-    private final Map<MachineState, State> states;
-
-    // Core components
-    private final Inventory inventory;
     private Transaction currentTransaction;
-
-    // Strategies
-    private PaymentStrategy paymentStrategy;
-    private ProductSelectionStrategy selectionStrategy;
-    private final Map<PaymentMethod, PaymentStrategy> paymentStrategies;
-
-    // Observers
+    private final Inventory inventory;
     private final List<VendingMachineObserver> observers;
+    private PaymentStrategy paymentStrategy;
+    private ProductSelectionStrategy productSelectionStrategy;
+    private final String machineId;
+    private boolean isOperational;
 
-    // Machine status
-    private boolean outOfService;
-
+    /**
+     * Creates a new VendingMachineContext with default settings.
+     */
     public VendingMachineContext() {
-        // Initialize states
-        this.states = new HashMap<>();
-        states.put(MachineState.IDLE, new IdleState());
-        states.put(MachineState.SELECTING, new SelectingState());
-        states.put(MachineState.PAYMENT, new PaymentState());
-        states.put(MachineState.DISPENSING, new DispensingState());
-        states.put(MachineState.OUT_OF_SERVICE, new OutOfServiceState());
-
-        this.currentState = states.get(MachineState.IDLE);
-
-        // Initialize components
+        this.machineId = "VM-" + UUID.randomUUID().toString().substring(0, 8);
         this.inventory = new Inventory();
-        this.outOfService = false;
-
-        // Initialize payment strategies
-        this.paymentStrategies = new HashMap<>();
-        paymentStrategies.put(PaymentMethod.CASH, new CashPaymentStrategy());
-        paymentStrategies.put(PaymentMethod.CARD, new CardPaymentStrategy());
-        paymentStrategies.put(PaymentMethod.MOBILE, new MobilePaymentStrategy());
-
-        // Default strategies
-        this.paymentStrategy = paymentStrategies.get(PaymentMethod.CASH);
-        this.selectionStrategy = new BasicProductSelectionStrategy();
-
-        // Initialize observers
         this.observers = new ArrayList<>();
-        addObserver(new ConsoleVendingObserver());
-        addObserver(new MaintenanceObserver());
+        this.currentState = new IdleState(this);
+        this.paymentStrategy = new CashPaymentStrategy(); // Default to cash
+        this.productSelectionStrategy = new BasicProductSelectionStrategy(); // Default to slot ID
+        this.isOperational = true;
+        
+        System.out.println("Vending Machine " + machineId + " initialized.");
+    }
 
-        initializeInventory();
+    // ==================== State Management ====================
+
+    /**
+     * Sets the current state of the vending machine.
+     * 
+     * @param state the new state
+     */
+    public void setCurrentState(State state) {
+        System.out.println("State transition: " + 
+            (currentState != null ? currentState.getStateName() : "NONE") + 
+            " -> " + state.getStateName());
+        this.currentState = state;
     }
 
     /**
-     * Initializes the vending machine with sample products.
+     * Gets the current state.
+     * 
+     * @return the current state
      */
-    private void initializeInventory() {
-        // Beverages
-        inventory.addProduct(new Product("A1", "Coke", 125, org.example.enums.ProductType.BEVERAGE), 10);
-        inventory.addProduct(new Product("A2", "Pepsi", 125, org.example.enums.ProductType.BEVERAGE), 8);
-        inventory.addProduct(new Product("A3", "Water", 100, org.example.enums.ProductType.BEVERAGE), 15);
-
-        // Snacks
-        inventory.addProduct(new Product("B1", "Chips", 150, org.example.enums.ProductType.SNACK), 12);
-        inventory.addProduct(new Product("B2", "Chocolate Bar", 175, org.example.enums.ProductType.CANDY), 6);
-        inventory.addProduct(new Product("B3", "Peanuts", 200, org.example.enums.ProductType.SNACK), 9);
-
-        // More items
-        inventory.addProduct(new Product("C1", "Gum", 75, org.example.enums.ProductType.CANDY), 20);
-        inventory.addProduct(new Product("C2", "Cookies", 225, org.example.enums.ProductType.SNACK), 7);
+    public State getCurrentState() {
+        return currentState;
     }
 
-    // State Pattern methods
-    public void insertCoin(CoinType coinType) {
-        if (outOfService) {
-            notifyObserversMaintenance("Machine is out of service");
-            return;
-        }
+    // ==================== Transaction Management ====================
 
-        Coin coin = new Coin(coinType);
-        currentState.insertCoin(this, coin);
-
-        // Start or update transaction
-        if (currentTransaction == null) {
-            currentTransaction = new Transaction();
-        }
-        currentTransaction.addCoin(coin);
-
-        notifyObserversCoinInserted(coinType, coinType.getValue());
-    }
-
-    public void selectProduct(String slotId) {
-        if (outOfService) {
-            notifyObserversMaintenance("Machine is out of service");
-            return;
-        }
-
-        String selectedSlot = selectionStrategy.selectProduct(inventory, slotId);
-        if (selectedSlot != null) {
-            currentState.selectProduct(this, selectedSlot);
-
-            if (currentTransaction == null) {
-                currentTransaction = new Transaction();
-            }
-            currentTransaction.setSelectedProductSlot(selectedSlot);
-            currentTransaction.setSelectedProduct(inventory.getProduct(selectedSlot).orElse(null));
-
-            // Transition to selecting state
-            changeState(MachineState.SELECTING);
-        }
-    }
-
-    public boolean processPayment() {
-        if (outOfService) {
-            notifyObserversMaintenance("Machine is out of service");
-            return false;
-        }
-
-        if (currentTransaction == null || !currentTransaction.isPaymentSufficient()) {
-            notifyObserversMaintenance("Insufficient payment");
-            return false;
-        }
-
-        changeState(MachineState.PAYMENT);
-        boolean success = currentState.processPayment(this);
-
-        if (success) {
-            currentTransaction.setStatus(TransactionStatus.PAYMENT_SUCCESS);
-            changeState(MachineState.DISPENSING);
-            dispenseProduct();
-        } else {
-            currentTransaction.setStatus(TransactionStatus.PAYMENT_FAILED);
-            notifyObserversMaintenance("Payment failed");
-        }
-
-        return success;
-    }
-
-    public void dispenseProduct() {
-        if (currentTransaction != null && currentTransaction.getSelectedProductSlot() != null) {
-            String slotId = currentTransaction.getSelectedProductSlot();
-            Product product = currentTransaction.getSelectedProduct();
-
-            if (inventory.dispenseProduct(slotId)) {
-                currentState.dispenseProduct(this);
-                notifyObserversProductDispensed(slotId, product.getName());
-
-                // Calculate and return change
-                int changeAmount = currentTransaction.getChangeAmount();
-                if (changeAmount > 0) {
-                    returnChange(changeAmount);
-                    currentTransaction.setChangeReturned(changeAmount);
-                }
-
-                currentTransaction.setStatus(TransactionStatus.COMPLETED);
-                resetTransaction();
-                changeState(MachineState.IDLE);
-            } else {
-                notifyObserversMaintenance("Failed to dispense product from slot " + slotId);
-                currentTransaction.setStatus(TransactionStatus.ERROR);
-            }
-        }
-    }
-
-    public void cancelTransaction() {
-        if (currentTransaction != null) {
-            currentState.cancelTransaction(this);
-
-            // Refund payment
-            int refundAmount = currentTransaction.getAmountPaid();
-            if (refundAmount > 0) {
-                returnChange(refundAmount);
-                currentTransaction.setChangeReturned(refundAmount);
-            }
-
-            currentTransaction.setStatus(TransactionStatus.CANCELLED);
-            resetTransaction();
-            changeState(MachineState.IDLE);
-        }
-    }
-
-    public void setServiceMode(boolean inService) {
-        currentState.setServiceMode(this, inService);
-        this.outOfService = inService;
-
-        if (inService) {
-            changeState(MachineState.OUT_OF_SERVICE);
-        } else {
-            changeState(MachineState.IDLE);
-        }
-    }
-
-    // Strategy setters
-    public void setPaymentMethod(PaymentMethod method) {
-        PaymentStrategy strategy = paymentStrategies.get(method);
-        if (strategy != null) {
-            this.paymentStrategy = strategy;
-            if (currentTransaction != null) {
-                currentTransaction.setPaymentMethod(method);
-            }
-        }
-    }
-
-    public void setSelectionStrategy(ProductSelectionStrategy strategy) {
-        this.selectionStrategy = strategy;
-    }
-
-    // Observer methods
-    public void addObserver(VendingMachineObserver observer) {
-        observers.add(observer);
-    }
-
-    public void removeObserver(VendingMachineObserver observer) {
-        observers.remove(observer);
-    }
-
-    // Utility methods
-    public void changeState(MachineState newState) {
-        MachineState oldState = getCurrentMachineState();
-        this.currentState = states.get(newState);
-        notifyObserversStateChange(oldState, newState);
-    }
-
-    private void resetTransaction() {
-        this.currentTransaction = null;
-    }
-
-    private void returnChange(int amount) {
-        if (paymentStrategy instanceof CashPaymentStrategy) {
-            CashPaymentStrategy cashStrategy = (CashPaymentStrategy) paymentStrategy;
-            List<CoinType> change = cashStrategy.calculateChange(amount);
-            if (!change.isEmpty()) {
-                System.out.println("Returning change: " + change);
-            } else {
-                System.out.println("Unable to make exact change for $" + String.format("%.2f", amount / 100.0));
-            }
-        }
-    }
-
-    // Observer notification methods
-    private void notifyObserversStateChange(MachineState oldState, MachineState newState) {
-        for (VendingMachineObserver observer : observers) {
-            observer.onStateChange(oldState, newState);
-        }
-    }
-
-    private void notifyObserversTransactionUpdate(String transactionId, TransactionStatus status) {
-        for (VendingMachineObserver observer : observers) {
-            observer.onTransactionUpdate(transactionId, status);
-        }
-    }
-
-    private void notifyObserversProductDispensed(String slotId, String productName) {
-        for (VendingMachineObserver observer : observers) {
-            observer.onProductDispensed(slotId, productName);
-        }
-    }
-
-    private void notifyObserversCoinInserted(CoinType coinType, int amount) {
-        for (VendingMachineObserver observer : observers) {
-            observer.onCoinInserted(coinType, amount);
-        }
-    }
-
-    private void notifyObserversMaintenance(String message) {
-        for (VendingMachineObserver observer : observers) {
-            observer.onMaintenanceAlert(message);
-        }
-    }
-
-    // Getters
-    public MachineState getCurrentMachineState() {
-        for (Map.Entry<MachineState, State> entry : states.entrySet()) {
-            if (entry.getValue() == currentState) {
-                return entry.getKey();
-            }
-        }
-        return MachineState.IDLE;
-    }
-
-    public Inventory getInventory() {
-        return inventory;
-    }
-
+    /**
+     * Gets the current transaction.
+     * 
+     * @return the current transaction
+     */
     public Transaction getCurrentTransaction() {
         return currentTransaction;
     }
 
+    /**
+     * Sets the current transaction.
+     * 
+     * @param transaction the transaction to set
+     */
+    public void setCurrentTransaction(Transaction transaction) {
+        this.currentTransaction = transaction;
+    }
+
+    /**
+     * Creates a new transaction for the given product.
+     * 
+     * @param productId the product ID
+     * @return the created transaction
+     */
+    public Transaction createTransaction(String productId) {
+        Product product = inventory.getProduct(productId);
+        if (product != null) {
+            this.currentTransaction = new Transaction(
+                productId, 
+                product.getPrice(), 
+                paymentStrategy instanceof CashPaymentStrategy ? 
+                    PaymentMethod.CASH : PaymentMethod.CARD
+            );
+            return currentTransaction;
+        }
+        return null;
+    }
+
+    /**
+     * Cancels the current transaction.
+     */
+    public void cancelCurrentTransaction() {
+        this.currentTransaction = null;
+    }
+
+    // ==================== Inventory Management ====================
+
+    /**
+     * Gets the inventory.
+     * 
+     * @return the inventory
+     */
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    /**
+     * Displays the current inventory.
+     */
+    public void displayInventory() {
+        System.out.println("\n" + inventory.toString());
+    }
+
+    // ==================== Observer Management ====================
+
+    /**
+     * Adds an observer to the vending machine.
+     * 
+     * @param observer the observer to add
+     */
+    public void addObserver(VendingMachineObserver observer) {
+        observers.add(observer);
+        System.out.println("Observer added: " + observer.getClass().getSimpleName());
+    }
+
+    /**
+     * Removes an observer from the vending machine.
+     * 
+     * @param observer the observer to remove
+     */
+    public void removeObserver(VendingMachineObserver observer) {
+        observers.remove(observer);
+    }
+
+    /**
+     * Notifies all observers of an event.
+     * 
+     * @param event the event type
+     * @param args the event arguments
+     */
+    public void notifyObservers(String event, Object... args) {
+        for (VendingMachineObserver observer : observers) {
+            switch (event) {
+                case "PRODUCT_SELECTED":
+                    observer.onProductSelected((String) args[0]);
+                    break;
+                case "COIN_INSERTED":
+                    observer.onCoinInserted((Integer) args[0]);
+                    break;
+                case "PAYMENT_PROCESSED":
+                    observer.onPaymentProcessed((Integer) args[0], (String) args[1]);
+                    break;
+                case "PRODUCT_DISPENSED":
+                    observer.onProductDispensed((String) args[0]);
+                    break;
+                case "TRANSACTION_COMPLETED":
+                    observer.onTransactionCompleted((String) args[0]);
+                    break;
+                case "TRANSACTION_FAILED":
+                    observer.onTransactionFailed((String) args[0], (String) args[1]);
+                    break;
+                case "MAINTENANCE_REQUIRED":
+                    observer.onMaintenanceRequired((String) args[0]);
+                    break;
+            }
+        }
+    }
+
+    // ==================== Strategy Management ====================
+
+    /**
+     * Gets the current payment strategy.
+     * 
+     * @return the payment strategy
+     */
     public PaymentStrategy getPaymentStrategy() {
         return paymentStrategy;
     }
 
-    public ProductSelectionStrategy getSelectionStrategy() {
-        return selectionStrategy;
+    /**
+     * Sets the payment strategy.
+     * 
+     * @param strategy the payment strategy
+     */
+    public void setPaymentStrategy(PaymentStrategy strategy) {
+        this.paymentStrategy = strategy;
+        System.out.println("Payment method changed to: " + strategy.getPaymentMethod());
     }
 
-    public boolean isOutOfService() {
-        return outOfService;
+    /**
+     * Gets the current product selection strategy.
+     * 
+     * @return the product selection strategy
+     */
+    public ProductSelectionStrategy getProductSelectionStrategy() {
+        return productSelectionStrategy;
     }
 
-    public List<VendingMachineObserver> getObservers() {
-        return new ArrayList<>(observers);
+    /**
+     * Sets the product selection strategy.
+     * 
+     * @param strategy the product selection strategy
+     */
+    public void setProductSelectionStrategy(ProductSelectionStrategy strategy) {
+        this.productSelectionStrategy = strategy;
+    }
+
+    // ==================== Machine Operations ====================
+
+    /**
+     * Returns change to the user.
+     * 
+     * @param amount the amount to return in cents
+     */
+    public void returnChange(int amount) {
+        if (amount <= 0) {
+            return;
+        }
+
+        System.out.println("\n[CHANGE] Returning $" + String.format("%.2f", amount / 100.0));
+        
+        // Calculate change in coins (greedy algorithm)
+        int remaining = amount;
+        List<String> changeCoins = new ArrayList<>();
+        
+        CoinType[] coins = {CoinType.DOLLAR, CoinType.QUARTER, CoinType.DIME, 
+                           CoinType.NICKEL, CoinType.PENNY};
+        
+        for (CoinType coin : coins) {
+            int count = remaining / coin.getValue();
+            if (count > 0) {
+                changeCoins.add(count + "x " + coin.name());
+                remaining -= count * coin.getValue();
+            }
+        }
+        
+        System.out.println("[CHANGE] " + String.join(", ", changeCoins));
+    }
+
+    /**
+     * Delegates product selection to the current state.
+     * 
+     * @param productId the product ID
+     */
+    public void selectProduct(String productId) {
+        currentState.selectProduct(productId);
+    }
+
+    /**
+     * Delegates coin insertion to the current state.
+     * 
+     * @param coinValue the coin value in cents
+     */
+    public void insertCoin(int coinValue) {
+        currentState.insertCoin(coinValue);
+    }
+
+    /**
+     * Delegates payment processing to the current state.
+     */
+    public void processPayment() {
+        currentState.processPayment();
+    }
+
+    /**
+     * Delegates product dispensing to the current state.
+     */
+    public void dispenseProduct() {
+        currentState.dispenseProduct();
+    }
+
+    /**
+     * Delegates transaction cancellation to the current state.
+     */
+    public void cancelTransaction() {
+        currentState.cancelTransaction();
+    }
+
+    // ==================== Machine Status ====================
+
+    /**
+     * Gets the machine ID.
+     * 
+     * @return the machine ID
+     */
+    public String getMachineId() {
+        return machineId;
+    }
+
+    /**
+     * Checks if the machine is operational.
+     * 
+     * @return true if operational, false otherwise
+     */
+    public boolean isOperational() {
+        return isOperational;
+    }
+
+    /**
+     * Sets the operational status of the machine.
+     * 
+     * @param operational the operational status
+     */
+    public void setOperational(boolean operational) {
+        this.isOperational = operational;
+    }
+
+    /**
+     * Gets the current machine status as a string.
+     * 
+     * @return the machine status
+     */
+    public String getMachineStatus() {
+        StringBuilder status = new StringBuilder();
+        status.append("\n=== Vending Machine Status ===\n");
+        status.append("Machine ID: ").append(machineId).append("\n");
+        status.append("State: ").append(currentState.getStateName()).append("\n");
+        status.append("Operational: ").append(isOperational ? "Yes" : "No").append("\n");
+        status.append("Payment Method: ").append(paymentStrategy.getPaymentMethod()).append("\n");
+        status.append("Total Items: ").append(inventory.getTotalItems()).append("\n");
+        status.append("Inventory Value: $").append(
+            String.format("%.2f", inventory.getTotalValue() / 100.0)).append("\n");
+        
+        if (currentTransaction != null) {
+            status.append("Active Transaction: ").append(currentTransaction.toString()).append("\n");
+        }
+        
+        status.append("=============================\n");
+        return status.toString();
     }
 }
+

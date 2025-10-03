@@ -1,45 +1,61 @@
 package org.example.states;
 
-import org.example.interfaces.State;
+import org.example.system.VendingMachineContext;
 
 /**
- * Out of Service State: Machine is in maintenance mode.
- * Only allows exiting service mode, all other operations are blocked.
+ * OutOfServiceState represents the state when the machine is under maintenance.
+ * In this state, no operations are allowed except returning to service.
+ * Valid transitions: OutOfServiceState -> IdleState (when service is complete)
  */
-public class OutOfServiceState implements State {
+public class OutOfServiceState extends AbstractState {
 
-    @Override
-    public void insertCoin(Object machine, Object coinType) {
-        System.out.println("Machine is out of service - cannot insert coins");
+    public OutOfServiceState(VendingMachineContext context) {
+        super(context);
     }
 
     @Override
-    public void selectProduct(Object machine, String slotId) {
-        System.out.println("Machine is out of service - cannot select products");
+    public void selectProduct(String productId) {
+        System.out.println("[OUT OF SERVICE] Machine is currently under maintenance.");
+        System.out.println("Please try again later.");
     }
 
     @Override
-    public boolean processPayment(Object machine) {
-        System.out.println("Machine is out of service - cannot process payments");
-        return false;
+    public void insertCoin(int coinValue) {
+        System.out.println("[OUT OF SERVICE] Machine is currently under maintenance.");
+        System.out.println("Cannot accept coins at this time.");
     }
 
     @Override
-    public void dispenseProduct(Object machine) {
-        System.out.println("Machine is out of service - cannot dispense products");
+    public void processPayment() {
+        System.out.println("[OUT OF SERVICE] Machine is currently under maintenance.");
+        System.out.println("Cannot process payments at this time.");
     }
 
     @Override
-    public void cancelTransaction(Object machine) {
-        System.out.println("Machine is out of service - cannot cancel transactions");
+    public void dispenseProduct() {
+        System.out.println("[OUT OF SERVICE] Machine is currently under maintenance.");
+        System.out.println("Cannot dispense products at this time.");
     }
 
     @Override
-    public void setServiceMode(Object machine, boolean inService) {
-        if (!inService) {
-            System.out.println("Exiting service mode...");
-        } else {
-            System.out.println("Already in service mode");
-        }
+    public void cancelTransaction() {
+        System.out.println("[OUT OF SERVICE] Machine is currently under maintenance.");
+        System.out.println("No active transactions to cancel.");
+    }
+
+    /**
+     * Returns the machine to service (transitions to IdleState).
+     */
+    public void returnToService() {
+        System.out.println("\n[OUT OF SERVICE] Maintenance complete. Returning to service...");
+        context.setOperational(true);
+        context.setCurrentState(new IdleState(context));
+        System.out.println("Machine is now operational.\n");
+    }
+
+    @Override
+    public String getStateName() {
+        return "OUT_OF_SERVICE";
     }
 }
+

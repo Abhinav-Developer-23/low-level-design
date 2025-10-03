@@ -1,51 +1,61 @@
 package org.example.interfaces;
 
-import org.example.enums.MachineState;
-import org.example.enums.TransactionStatus;
-
 /**
- * Observer interface for the Observer Pattern implementation.
- * Defines the contract for classes that want to observe vending machine events.
+ * Observer interface for the Observer Design Pattern.
+ * Allows different components to be notified of vending machine events.
+ * Follows Observer Pattern and Interface Segregation Principle.
  */
 public interface VendingMachineObserver {
-
+    
     /**
-     * Called when the machine state changes.
-     * @param oldState The previous state
-     * @param newState The new state
+     * Notifies when a product is selected.
+     * 
+     * @param productId the ID of the selected product
      */
-    void onStateChange(MachineState oldState, MachineState newState);
-
+    void onProductSelected(String productId);
+    
     /**
-     * Called when a transaction status changes.
-     * @param transactionId The ID of the transaction
-     * @param status The new transaction status
+     * Notifies when a coin is inserted.
+     * 
+     * @param coinValue the value of the inserted coin in cents
      */
-    void onTransactionUpdate(String transactionId, TransactionStatus status);
-
+    void onCoinInserted(int coinValue);
+    
     /**
-     * Called when a product is dispensed.
-     * @param slotId The slot ID of the dispensed product
-     * @param productName The name of the dispensed product
+     * Notifies when payment is processed.
+     * 
+     * @param amount the payment amount in cents
+     * @param method the payment method used
      */
-    void onProductDispensed(String slotId, String productName);
-
+    void onPaymentProcessed(int amount, String method);
+    
     /**
-     * Called when coins are inserted.
-     * @param coinType The type of coin inserted
-     * @param amount The amount in cents
+     * Notifies when a product is dispensed.
+     * 
+     * @param productId the ID of the dispensed product
      */
-    void onCoinInserted(Object coinType, int amount);
-
+    void onProductDispensed(String productId);
+    
     /**
-     * Called when maintenance is needed (e.g., low inventory).
-     * @param message The maintenance message
+     * Notifies when a transaction is completed.
+     * 
+     * @param transactionId the ID of the completed transaction
      */
-    void onMaintenanceAlert(String message);
-
+    void onTransactionCompleted(String transactionId);
+    
     /**
-     * Gets the name/identifier of this observer.
-     * @return String identifier for the observer
+     * Notifies when a transaction fails.
+     * 
+     * @param transactionId the ID of the failed transaction
+     * @param reason the reason for failure
      */
-    String getObserverName();
+    void onTransactionFailed(String transactionId, String reason);
+    
+    /**
+     * Notifies when maintenance is required.
+     * 
+     * @param message the maintenance message
+     */
+    void onMaintenanceRequired(String message);
 }
+

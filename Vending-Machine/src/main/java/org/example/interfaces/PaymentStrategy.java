@@ -1,27 +1,27 @@
 package org.example.interfaces;
 
+import org.example.model.Transaction;
+
 /**
- * Payment Strategy interface for the Strategy Pattern implementation.
- * Defines the contract for different payment methods.
+ * Strategy interface for different payment methods.
+ * This follows the Strategy Pattern and allows different payment processing algorithms.
+ * Also follows the Open/Closed Principle and Interface Segregation Principle.
  */
 public interface PaymentStrategy {
-
+    
     /**
-     * Processes payment for the given amount.
-     * @param amount The amount to be paid in cents
+     * Processes payment for the given transaction.
+     * 
+     * @param transaction the transaction to process
      * @return true if payment was successful, false otherwise
      */
-    boolean processPayment(int amount);
-
+    boolean processPayment(Transaction transaction);
+    
     /**
      * Gets the name of the payment method.
-     * @return String representation of the payment method
+     * 
+     * @return the payment method name
      */
-    String getPaymentMethodName();
-
-    /**
-     * Validates if the payment method is available.
-     * @return true if payment method is available, false otherwise
-     */
-    boolean isAvailable();
+    String getPaymentMethod();
 }
+

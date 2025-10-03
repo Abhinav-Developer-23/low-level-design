@@ -1,49 +1,87 @@
 package org.example.states;
 
-import org.example.interfaces.State;
+import org.example.system.VendingMachineContext;
+import org.example.model.Transaction;
+import org.example.enums.TransactionStatus;
+import org.example.interfaces.PaymentStrategy;
 
 /**
- * Payment State: Processing payment for selected product.
- * Payment validation and processing occurs in this state.
+ * PaymentState represents the state when payment is being processed.
+ * In this state, the payment strategy validates and processes the payment.
+ * Valid transitions: PaymentState -> DispensingState or PaymentState -> IdleState (on failure)
  */
-public class PaymentState implements State {
+public class PaymentState extends AbstractState {
 
-    @Override
-    public void insertCoin(Object machine, Object coinType) {
-        System.out.println("Cannot insert coins during payment processing");
+    public PaymentState(VendingMachineContext context) {
+        super(context);
     }
 
     @Override
-    public void selectProduct(Object machine, String slotId) {
-        System.out.println("Cannot change product selection during payment");
-    }
+    public void processPayment() {
+        Transaction transaction = context.getCurrentTransaction();
+        if (transaction == null) {
+            System.out.println("ERROR: No active transaction.");
+            context.setCurrentState(new IdleState(context));
+            return;
+        }
 
-    @Override
-    public boolean processPayment(Object machine) {
-        System.out.println("Processing payment...");
-        // Simulate payment processing
-        try {
-            Thread.sleep(1000); // Simulate processing time
-            System.out.println("Payment processed successfully");
-            return true;
-        } catch (InterruptedException e) {
-            System.out.println("Payment processing interrupted");
-            return false;
+        System.out.println("[PAYMENT] Processing payment using " + 
+                         transaction.getPaymentMethod() + "...");
+        
+        transaction.setStatus(TransactionStatus.PROCESSING);
+        
+        // Get payment strategy and process payment
+        PaymentStrategy paymentStrategy = context.getPaymentStrategy();
+        boolean paymentSuccessful = paymentStrategy.processPayment(transaction);
+        
+        if (paymentSuccessful) {
+            System.out.println("[PAYMENT] Payment successful!");
+            transaction.setStatus(TransactionStatus.COMPLETED);
+            
+            // Notify observers
+            context.notifyObservers("PAYMENT_PROCESSED", 
+                                  transaction.getProductPrice(), 
+                                  paymentStrategy.getPaymentMethod());
+            
+            // Transition to DispensingState
+            context.setCurrentState(new DispensingState(context));
+            context.getCurrentState().dispenseProduct();
+        } else {
+            System.out.println("[PAYMENT] Payment failed! Refunding...");
+            transaction.setStatus(TransactionStatus.FAILED);
+            
+            // Return money if cash payment
+            if (transaction.needsRefund()) {
+                context.returnChange(transaction.getTotalInsertedAmount());
+            }
+            
+            // Notify observers
+            context.notifyObservers("TRANSACTION_FAILED", 
+                                  transaction.getTransactionId(), 
+                                  "Payment processing failed");
+            
+            context.cancelCurrentTransaction();
+            context.setCurrentState(new IdleState(context));
         }
     }
 
     @Override
-    public void dispenseProduct(Object machine) {
-        System.out.println("Dispensing product after payment");
+    public void cancelTransaction() {
+        System.out.println("\n[PAYMENT] Cancelling transaction during payment...");
+        
+        Transaction transaction = context.getCurrentTransaction();
+        if (transaction != null && transaction.needsRefund()) {
+            context.returnChange(transaction.getTotalInsertedAmount());
+        }
+        
+        context.cancelCurrentTransaction();
+        context.setCurrentState(new IdleState(context));
+        System.out.println("Transaction cancelled. Returning to idle state.");
     }
 
     @Override
-    public void cancelTransaction(Object machine) {
-        System.out.println("Cancelling transaction during payment - refund will be processed");
-    }
-
-    @Override
-    public void setServiceMode(Object machine, boolean inService) {
-        System.out.println("Cannot enter service mode during payment processing");
+    public String getStateName() {
+        return "PAYMENT";
     }
 }
+

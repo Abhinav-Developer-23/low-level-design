@@ -1,48 +1,46 @@
 package org.example.interfaces;
 
 /**
- * State interface for the State Pattern implementation.
- * Defines the behavior that each concrete state must implement.
+ * State interface for the State Design Pattern.
+ * Each concrete state implements this interface to define behavior in that state.
+ * This follows the Open/Closed Principle - open for extension, closed for modification.
  */
 public interface State {
-
+    
     /**
-     * Inserts a coin into the vending machine.
-     * @param machine The vending machine context
-     * @param coinType The type of coin being inserted
+     * Handles product selection in the current state.
+     * 
+     * @param productId the ID of the product to select
      */
-    void insertCoin(Object machine, Object coinType);
-
+    void selectProduct(String productId);
+    
     /**
-     * Selects a product by slot ID.
-     * @param machine The vending machine context
-     * @param slotId The slot identifier (e.g., "A1", "B2")
+     * Handles coin insertion in the current state.
+     * 
+     * @param coinValue the value of the coin in cents
      */
-    void selectProduct(Object machine, String slotId);
-
+    void insertCoin(int coinValue);
+    
     /**
-     * Processes the payment for the selected product.
-     * @param machine The vending machine context
-     * @return true if payment was successful, false otherwise
+     * Processes payment in the current state.
      */
-    boolean processPayment(Object machine);
-
+    void processPayment();
+    
     /**
-     * Dispenses the selected product and returns change.
-     * @param machine The vending machine context
+     * Dispenses the product in the current state.
      */
-    void dispenseProduct(Object machine);
-
+    void dispenseProduct();
+    
     /**
      * Cancels the current transaction and refunds money.
-     * @param machine The vending machine context
      */
-    void cancelTransaction(Object machine);
-
+    void cancelTransaction();
+    
     /**
-     * Sets the machine to service/maintenance mode.
-     * @param machine The vending machine context
-     * @param inService true to enter service mode, false to exit
+     * Gets the name of the current state.
+     * 
+     * @return the state name
      */
-    void setServiceMode(Object machine, boolean inService);
+    String getStateName();
 }
+

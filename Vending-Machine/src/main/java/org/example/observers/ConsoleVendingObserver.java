@@ -1,72 +1,62 @@
 package org.example.observers;
 
-import org.example.enums.CoinType;
-import org.example.enums.MachineState;
-import org.example.enums.TransactionStatus;
 import org.example.interfaces.VendingMachineObserver;
 
 /**
- * Console Vending Observer: Logs all vending machine events to console.
- * Provides real-time monitoring and debugging information.
+ * Console observer that logs all vending machine events to the console.
+ * Useful for debugging and monitoring machine operations.
+ * Follows Observer Pattern and Single Responsibility Principle.
  */
 public class ConsoleVendingObserver implements VendingMachineObserver {
 
     @Override
-    public void onStateChange(MachineState oldState, MachineState newState) {
-        System.out.println("[OBSERVER] Machine state changed: " + oldState + " → " + newState);
+    public void onProductSelected(String productId) {
+        log("PRODUCT_SELECTED", "Product " + productId + " has been selected");
     }
 
     @Override
-    public void onTransactionUpdate(String transactionId, TransactionStatus status) {
-        System.out.println("[OBSERVER] Transaction " + transactionId + " status: " + status);
+    public void onCoinInserted(int coinValue) {
+        log("COIN_INSERTED", coinValue + " cents inserted");
     }
 
     @Override
-    public void onProductDispensed(String slotId, String productName) {
-        System.out.println("[OBSERVER] Product dispensed: " + productName + " from slot " + slotId);
+    public void onPaymentProcessed(int amount, String method) {
+        log("PAYMENT_PROCESSED", 
+            String.format("Payment of $%.2f processed using %s", amount / 100.0, method));
     }
 
     @Override
-    public void onCoinInserted(Object coinType, int amount) {
-        if (coinType instanceof CoinType) {
-            CoinType coin = (CoinType) coinType;
-            System.out.println("[OBSERVER] Coin inserted: " + coin + " ($" + String.format("%.2f", amount / 100.0) + ")");
-        } else {
-            System.out.println("[OBSERVER] Coin inserted: " + coinType + " ($" + String.format("%.2f", amount / 100.0) + ")");
-        }
+    public void onProductDispensed(String productId) {
+        log("PRODUCT_DISPENSED", "Product " + productId + " has been dispensed");
     }
 
     @Override
-    public void onMaintenanceAlert(String message) {
-        System.out.println("[MAINTENANCE ALERT] " + message);
+    public void onTransactionCompleted(String transactionId) {
+        log("TRANSACTION_COMPLETED", "Transaction " + transactionId.substring(0, 8) + " completed");
     }
 
     @Override
-    public String getObserverName() {
-        return "Console Observer";
+    public void onTransactionFailed(String transactionId, String reason) {
+        String id = (transactionId != null && transactionId.length() >= 8) 
+            ? transactionId.substring(0, 8) 
+            : transactionId;
+        log("TRANSACTION_FAILED", 
+            "Transaction " + id + " failed: " + reason);
+    }
+
+    @Override
+    public void onMaintenanceRequired(String message) {
+        log("MAINTENANCE_REQUIRED", message);
     }
 
     /**
-     * Logs a custom event message.
-     * @param message The event message to log
+     * Logs an event to the console with formatting.
+     * 
+     * @param eventType the type of event
+     * @param message the event message
      */
-    public void logEvent(String message) {
-        System.out.println("[EVENT] " + message);
-    }
-
-    /**
-     * Logs an error message.
-     * @param error The error message to log
-     */
-    public void logError(String error) {
-        System.err.println("[ERROR] " + error);
-    }
-
-    /**
-     * Logs a warning message.
-     * @param warning The warning message to log
-     */
-    public void logWarning(String warning) {
-        System.out.println("[WARNING] " + warning);
+    private void log(String eventType, String message) {
+        System.out.println("[OBSERVER:CONSOLE] [" + eventType + "] " + message);
     }
 }
+

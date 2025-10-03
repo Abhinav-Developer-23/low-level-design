@@ -1,51 +1,78 @@
 package org.example.states;
 
-import org.example.interfaces.State;
+import org.example.system.VendingMachineContext;
+import org.example.model.Transaction;
+import org.example.model.Product;
 
 /**
- * Dispensing State: Dispensing product and returning change.
- * Final state in the transaction process.
+ * DispensingState represents the state when the product is being dispensed.
+ * In this state, the machine dispenses the product and returns change if needed.
+ * Valid transitions: DispensingState -> IdleState
  */
-public class DispensingState implements State {
+public class DispensingState extends AbstractState {
 
-    @Override
-    public void insertCoin(Object machine, Object coinType) {
-        System.out.println("Cannot insert coins during dispensing");
+    public DispensingState(VendingMachineContext context) {
+        super(context);
     }
 
     @Override
-    public void selectProduct(Object machine, String slotId) {
-        System.out.println("Cannot select products during dispensing");
-    }
-
-    @Override
-    public boolean processPayment(Object machine) {
-        System.out.println("Payment already processed");
-        return false;
-    }
-
-    @Override
-    public void dispenseProduct(Object machine) {
-        System.out.println("Dispensing product...");
-        // Simulate dispensing time
-        try {
-            Thread.sleep(2000);
-            System.out.println("Product dispensed successfully!");
-            System.out.println("Returning change...");
-            Thread.sleep(1000);
-            System.out.println("Change returned. Thank you!");
-        } catch (InterruptedException e) {
-            System.out.println("Dispensing interrupted");
+    public void dispenseProduct() {
+        Transaction transaction = context.getCurrentTransaction();
+        if (transaction == null) {
+            System.out.println("ERROR: No active transaction.");
+            context.setCurrentState(new IdleState(context));
+            return;
         }
+
+        System.out.println("\n[DISPENSING] Dispensing product...");
+        
+        // Dispense product from inventory
+        Product product = context.getInventory().dispenseProduct(transaction.getProductId());
+        
+        if (product != null) {
+            System.out.println("[OK] Product dispensed: " + product.getName());
+            System.out.println("[OK] Remaining stock: " + product.getQuantity());
+            
+            // Return change if any
+            int change = transaction.getChangeAmount();
+            if (change > 0) {
+                context.returnChange(change);
+            }
+            
+            // Notify observers
+            context.notifyObservers("PRODUCT_DISPENSED", product.getId());
+            context.notifyObservers("TRANSACTION_COMPLETED", transaction.getTransactionId());
+            
+            // Check for low stock and notify
+            if (context.getInventory().isLowStock(product.getId())) {
+                context.notifyObservers("MAINTENANCE_REQUIRED", 
+                    "Low stock alert: " + product.getName() + " (ID: " + 
+                    product.getId() + ", Quantity: " + product.getQuantity() + ")");
+            }
+            
+            System.out.println("\n[OK] Transaction completed successfully!");
+        } else {
+            System.out.println("ERROR: Failed to dispense product. Refunding...");
+            
+            // Refund the payment
+            if (transaction.needsRefund()) {
+                context.returnChange(transaction.getTotalInsertedAmount());
+            }
+            
+            context.notifyObservers("TRANSACTION_FAILED", 
+                                  transaction.getTransactionId(), 
+                                  "Product dispensing failed");
+        }
+        
+        // Clear transaction and return to idle
+        context.cancelCurrentTransaction();
+        context.setCurrentState(new IdleState(context));
+        System.out.println("Ready for next transaction.\n");
     }
 
     @Override
-    public void cancelTransaction(Object machine) {
-        System.out.println("Cannot cancel transaction during dispensing");
-    }
-
-    @Override
-    public void setServiceMode(Object machine, boolean inService) {
-        System.out.println("Cannot enter service mode during dispensing");
+    public String getStateName() {
+        return "DISPENSING";
     }
 }
+

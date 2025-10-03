@@ -1,29 +1,47 @@
 package org.example.model;
 
 import org.example.enums.CoinType;
+import java.util.Objects;
 
 /**
- * Represents a physical coin in the vending machine system.
- * Wraps the CoinType enum with additional functionality.
+ * Represents a coin in the vending machine.
+ * Immutable class following good OOP practices.
  */
 public class Coin {
-    private final CoinType coinType;
+    private final CoinType type;
+    private final int value;
 
-    public Coin(CoinType coinType) {
-        this.coinType = coinType;
+    /**
+     * Creates a new Coin instance.
+     * 
+     * @param type the type of coin
+     */
+    public Coin(CoinType type) {
+        this.type = type;
+        this.value = type.getValue();
     }
 
-    public CoinType getCoinType() {
-        return coinType;
+    /**
+     * Gets the coin type.
+     * 
+     * @return the coin type
+     */
+    public CoinType getType() {
+        return type;
     }
 
+    /**
+     * Gets the coin value in cents.
+     * 
+     * @return the coin value
+     */
     public int getValue() {
-        return coinType.getValue();
+        return value;
     }
 
     @Override
     public String toString() {
-        return coinType.toString();
+        return type.toString();
     }
 
     @Override
@@ -31,11 +49,12 @@ public class Coin {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Coin coin = (Coin) obj;
-        return coinType == coin.coinType;
+        return type == coin.type;
     }
 
     @Override
     public int hashCode() {
-        return coinType.hashCode();
+        return Objects.hash(type);
     }
 }
+

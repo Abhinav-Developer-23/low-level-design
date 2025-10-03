@@ -1,17 +1,34 @@
 package org.example.enums;
 
 /**
- * Enumeration representing the status of a vending machine transaction.
- * Used for tracking transaction lifecycle and error handling.
+ * Represents the different statuses of a vending machine transaction.
  */
 public enum TransactionStatus {
-    INITIATED,      // Transaction started
-    PAYMENT_PENDING,// Waiting for payment completion
-    PAYMENT_SUCCESS,// Payment processed successfully
-    PAYMENT_FAILED, // Payment processing failed
-    DISPENSING,     // Product being dispensed
-    COMPLETED,      // Transaction completed successfully
-    CANCELLED,      // Transaction cancelled by user
-    REFUNDED,       // Payment refunded
-    ERROR           // Transaction error occurred
+    PENDING("Awaiting payment"),
+    PROCESSING("Processing payment"),
+    COMPLETED("Transaction completed successfully"),
+    FAILED("Transaction failed"),
+    CANCELLED("Transaction cancelled by user"),
+    REFUNDING("Refunding payment");
+
+    private final String description;
+
+    TransactionStatus(String description) {
+        this.description = description;
+    }
+
+    /**
+     * Gets a human-readable description of the transaction status.
+     * 
+     * @return the status description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public String toString() {
+        return name() + ": " + description;
+    }
 }
+

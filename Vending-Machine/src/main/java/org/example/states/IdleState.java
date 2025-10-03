@@ -1,45 +1,53 @@
 package org.example.states;
 
-import org.example.enums.MachineState;
-import org.example.enums.TransactionStatus;
-import org.example.interfaces.State;
-import org.example.model.Coin;
+import org.example.system.VendingMachineContext;
+import org.example.model.Product;
 
 /**
- * Idle State: Machine is ready for product selection.
- * This is the initial state where users can insert coins or select products.
+ * IdleState represents the initial state of the vending machine.
+ * In this state, the machine is ready to accept product selection.
+ * Valid transitions: IdleState -> SelectingState
  */
-public class IdleState implements State {
+public class IdleState extends AbstractState {
 
-    @Override
-    public void insertCoin(Object machine, Object coinType) {
-        // For now, we'll implement this when we have the context class
-        System.out.println("Coin inserted in Idle state: " + coinType);
+    public IdleState(VendingMachineContext context) {
+        super(context);
     }
 
     @Override
-    public void selectProduct(Object machine, String slotId) {
-        System.out.println("Product selected in Idle state: " + slotId);
+    public void selectProduct(String productId) {
+        System.out.println("\n[IDLE] Selecting product: " + productId);
+        
+        // Check if product exists and is available
+        Product product = context.getInventory().getProduct(productId);
+        
+        if (product == null) {
+            System.out.println("ERROR: Product '" + productId + "' not found.");
+            context.notifyObservers("TRANSACTION_FAILED", productId, "Product not found");
+            return;
+        }
+        
+        if (!product.isAvailable()) {
+            System.out.println("ERROR: Product '" + productId + "' is out of stock.");
+            context.notifyObservers("TRANSACTION_FAILED", productId, "Out of stock");
+            return;
+        }
+        
+        // Create transaction
+        context.createTransaction(productId);
+        System.out.println("Product selected: " + product.getName() + " - " + product.getFormattedPrice());
+        System.out.println("Please insert " + product.getFormattedPrice() + " (or use card/mobile payment)");
+        
+        // Notify observers
+        context.notifyObservers("PRODUCT_SELECTED", productId);
+        
+        // Transition to SelectingState
+        context.setCurrentState(new SelectingState(context));
     }
 
     @Override
-    public boolean processPayment(Object machine) {
-        System.out.println("Cannot process payment in Idle state - no product selected");
-        return false;
-    }
-
-    @Override
-    public void dispenseProduct(Object machine) {
-        System.out.println("Cannot dispense product in Idle state");
-    }
-
-    @Override
-    public void cancelTransaction(Object machine) {
-        System.out.println("No transaction to cancel in Idle state");
-    }
-
-    @Override
-    public void setServiceMode(Object machine, boolean inService) {
-        System.out.println("Setting service mode: " + inService);
+    public String getStateName() {
+        return "IDLE";
     }
 }
+

@@ -4,34 +4,42 @@ import org.example.model.Product;
 import org.example.model.Transaction;
 
 /**
- * Observer Pattern: Interface for vending machine event notifications
- * Follows Interface Segregation Principle (ISP)
+ * Observer Pattern: Observers get notified of vending machine events
  */
 public interface VendingMachineObserver {
     /**
      * Called when a product is dispensed
-     * @param product The product that was dispensed
-     * @param transaction The associated transaction
      */
     void onProductDispensed(Product product, Transaction transaction);
-
+    
     /**
      * Called when payment is received
-     * @param transaction The transaction for which payment was received
      */
-    void onPaymentReceived(Transaction transaction);
-
+    void onPaymentReceived(double amount, String paymentMethod);
+    
     /**
-     * Called when a transaction fails
-     * @param transaction The failed transaction
-     * @param reason The reason for failure
+     * Called when change is returned
      */
-    void onTransactionFailed(Transaction transaction, String reason);
-
+    void onChangeReturned(double changeAmount);
+    
     /**
-     * Called when money is refunded
-     * @param transaction The transaction being refunded
-     * @param amount The refund amount
+     * Called when a product is out of stock
      */
-    void onRefundProcessed(Transaction transaction, double amount);
+    void onProductOutOfStock(Product product);
+    
+    /**
+     * Called when a product is low in stock
+     */
+    void onProductLowStock(Product product, int remainingStock);
+    
+    /**
+     * Called when transaction is cancelled
+     */
+    void onTransactionCancelled(double refundAmount);
+    
+    /**
+     * Called when an error occurs
+     */
+    void onError(String errorMessage);
 }
+

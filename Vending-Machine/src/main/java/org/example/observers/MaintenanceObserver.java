@@ -5,82 +5,102 @@ import org.example.model.Product;
 import org.example.model.Transaction;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Observer Pattern: Maintenance observer for monitoring vending machine health
- * Tracks low inventory, frequent failures, and maintenance needs
+ * Maintenance tracking observer
+ * Tracks sales, revenue, and maintenance alerts
  */
 public class MaintenanceObserver implements VendingMachineObserver {
-
-    private final AtomicInteger totalTransactions;
-    private final AtomicInteger failedTransactions;
-    private final AtomicInteger lowInventoryAlerts;
+    private final AtomicInteger totalSales;
+    private double totalRevenue;
+    private final ConcurrentHashMap<String, Integer> productSalesCount;
+    private final DateTimeFormatter timeFormatter;
 
     public MaintenanceObserver() {
-        this.totalTransactions = new AtomicInteger(0);
-        this.failedTransactions = new AtomicInteger(0);
-        this.lowInventoryAlerts = new AtomicInteger(0);
+        this.totalSales = new AtomicInteger(0);
+        this.totalRevenue = 0.0;
+        this.productSalesCount = new ConcurrentHashMap<>();
+        this.timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     }
 
     @Override
     public void onProductDispensed(Product product, Transaction transaction) {
-        totalTransactions.incrementAndGet();
-
-        // Check for low inventory
-        if (product.getQuantity() <= 2) {
-            lowInventoryAlerts.incrementAndGet();
-            System.out.printf("[%s] [MAINTENANCE] LOW INVENTORY ALERT: %s has only %d items remaining%n",
-                    LocalDateTime.now(), product.getName(), product.getQuantity());
+        totalSales.incrementAndGet();
+        synchronized (this) {
+            totalRevenue += product.getPrice();
         }
-
-        // Periodic maintenance check
-        if (totalTransactions.get() % 10 == 0) {
-            performMaintenanceCheck();
-        }
+        productSalesCount.merge(product.getName(), 1, Integer::sum);
+        
+        log("✓ Sale completed: " + product.getName() + " | Total sales: " + totalSales.get());
     }
 
     @Override
-    public void onPaymentReceived(Transaction transaction) {
-        // Monitor payment processing
+    public void onPaymentReceived(double amount, String paymentMethod) {
+        log("Payment received: $" + String.format("%.2f", amount) + " via " + paymentMethod);
     }
 
     @Override
-    public void onTransactionFailed(Transaction transaction, String reason) {
-        failedTransactions.incrementAndGet();
-
-        double failureRate = (double) failedTransactions.get() / totalTransactions.get() * 100;
-        if (failureRate > 10.0) {
-            System.out.printf("[%s] [MAINTENANCE] HIGH FAILURE RATE ALERT: %.1f%% of transactions failing%n",
-                    LocalDateTime.now(), failureRate);
-        }
+    public void onChangeReturned(double changeAmount) {
+        log("Change returned: $" + String.format("%.2f", changeAmount));
     }
 
     @Override
-    public void onRefundProcessed(Transaction transaction, double amount) {
-        // Monitor refunds - high refund rate might indicate machine issues
+    public void onProductOutOfStock(Product product) {
+        logAlert("CRITICAL - Out of Stock: " + product.getName() + " - RESTOCK REQUIRED");
     }
 
-    private void performMaintenanceCheck() {
-        System.out.printf("[%s] [MAINTENANCE] Periodic check: %d total transactions, %d failures, %d low inventory alerts%n",
-                LocalDateTime.now(), totalTransactions.get(), failedTransactions.get(), lowInventoryAlerts.get());
+    @Override
+    public void onProductLowStock(Product product, int remainingStock) {
+        logAlert("WARNING - Low Stock: " + product.getName() + " - " + 
+                remainingStock + " units remaining");
     }
 
-    // Maintenance statistics getters
-    public int getTotalTransactions() {
-        return totalTransactions.get();
+    @Override
+    public void onTransactionCancelled(double refundAmount) {
+        log("Transaction cancelled. Refund issued: $" + String.format("%.2f", refundAmount));
     }
 
-    public int getFailedTransactions() {
-        return failedTransactions.get();
+    @Override
+    public void onError(String errorMessage) {
+        logAlert("ERROR: " + errorMessage);
     }
 
-    public int getLowInventoryAlerts() {
-        return lowInventoryAlerts.get();
+    /**
+     * Get sales statistics
+     */
+    public String getStatistics() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n" + "=".repeat(60) + "\n");
+        sb.append("📊 MAINTENANCE REPORT\n");
+        sb.append("=".repeat(60) + "\n");
+        sb.append(String.format("Total Sales: %d\n", totalSales.get()));
+        sb.append(String.format("Total Revenue: $%.2f\n", totalRevenue));
+        sb.append("\nProduct Sales Breakdown:\n");
+        productSalesCount.forEach((product, count) -> 
+            sb.append(String.format("  - %-20s : %d units\n", product, count)));
+        sb.append("=".repeat(60) + "\n");
+        return sb.toString();
     }
 
-    public double getFailureRate() {
-        int total = totalTransactions.get();
-        return total > 0 ? (double) failedTransactions.get() / total * 100 : 0.0;
+    private void log(String message) {
+        String timestamp = LocalDateTime.now().format(timeFormatter);
+        System.out.println("[MAINTENANCE " + timestamp + "] " + message);
+    }
+
+    private void logAlert(String message) {
+        String timestamp = LocalDateTime.now().format(timeFormatter);
+        System.out.println("[MAINTENANCE ALERT " + timestamp + "] ⚠️  " + message);
+    }
+
+    public int getTotalSales() {
+        return totalSales.get();
+    }
+
+    public synchronized double getTotalRevenue() {
+        return totalRevenue;
     }
 }
+

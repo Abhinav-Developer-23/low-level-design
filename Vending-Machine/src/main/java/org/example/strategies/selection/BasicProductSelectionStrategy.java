@@ -3,25 +3,26 @@ package org.example.strategies.selection;
 import org.example.interfaces.ProductSelectionStrategy;
 import org.example.model.Product;
 
-import java.util.List;
+import java.util.Map;
 
 /**
- * Strategy Pattern: Basic product selection by product code
- * Selects product by exact match of product ID
+ * Basic product selection by product ID (e.g., "A1", "B2")
  */
 public class BasicProductSelectionStrategy implements ProductSelectionStrategy {
-
+    
     @Override
-    public Product selectProduct(List<Product> products, String criteria) {
-        if (criteria == null || criteria.trim().isEmpty()) {
+    public Product selectProduct(String identifier, Map<String, Product> products) {
+        if (identifier == null || identifier.trim().isEmpty()) {
             return null;
         }
+        
+        // Direct lookup by product ID
+        return products.get(identifier.toUpperCase().trim());
+    }
 
-        String productCode = criteria.trim().toUpperCase();
-
-        return products.stream()
-                .filter(product -> product.getProductId().equalsIgnoreCase(productCode) && product.isAvailable())
-                .findFirst()
-                .orElse(null);
+    @Override
+    public String getStrategyName() {
+        return "Basic Selection (Product ID)";
     }
 }
+

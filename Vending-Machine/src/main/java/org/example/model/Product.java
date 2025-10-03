@@ -3,52 +3,29 @@ package org.example.model;
 import org.example.enums.ProductType;
 import org.example.interfaces.Dispensable;
 
-import java.time.LocalDateTime;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Objects;
 
 /**
- * Represents a product in the vending machine
- * Implements Dispensable interface following Interface Segregation Principle
+ * Immutable Product class representing a vending machine product
  */
 public class Product implements Dispensable {
-
     private final String productId;
     private final String name;
-    private final ProductType type;
     private final double price;
-    private final AtomicInteger quantity;
-    private final LocalDateTime expirationDate;
+    private final ProductType type;
+    private final int calories;
 
-    public Product(String productId, String name, ProductType type, double price, int initialQuantity) {
+    public Product(String productId, String name, double price, ProductType type, int calories) {
         this.productId = productId;
         this.name = name;
-        this.type = type;
         this.price = price;
-        this.quantity = new AtomicInteger(initialQuantity);
-        this.expirationDate = LocalDateTime.now().plusDays(30); // Default 30 days expiration
-    }
-
-    public Product(String productId, String name, ProductType type, double price, int initialQuantity, LocalDateTime expirationDate) {
-        this.productId = productId;
-        this.name = name;
         this.type = type;
-        this.price = price;
-        this.quantity = new AtomicInteger(initialQuantity);
-        this.expirationDate = expirationDate;
+        this.calories = calories;
     }
 
     @Override
-    public boolean dispense() {
-        int currentQuantity = quantity.get();
-        if (currentQuantity > 0 && isAvailable()) {
-            return quantity.compareAndSet(currentQuantity, currentQuantity - 1);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean isAvailable() {
-        return quantity.get() > 0 && !isExpired();
+    public String getId() {
+        return productId;
     }
 
     @Override
@@ -56,15 +33,17 @@ public class Product implements Dispensable {
         return name;
     }
 
-    public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expirationDate);
+    @Override
+    public double getPrice() {
+        return price;
     }
 
-    public void restock(int amount) {
-        quantity.addAndGet(amount);
+    @Override
+    public boolean isAvailable() {
+        // Availability is checked through Inventory
+        return true;
     }
 
-    // Getters
     public String getProductId() {
         return productId;
     }
@@ -73,21 +52,27 @@ public class Product implements Dispensable {
         return type;
     }
 
-    public double getPrice() {
-        return price;
+    public int getCalories() {
+        return calories;
     }
 
-    public int getQuantity() {
-        return quantity.get();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return Objects.equals(productId, product.productId);
     }
 
-    public LocalDateTime getExpirationDate() {
-        return expirationDate;
+    @Override
+    public int hashCode() {
+        return Objects.hash(productId);
     }
 
     @Override
     public String toString() {
-        return String.format("Product{id='%s', name='%s', type=%s, price=%.2f, quantity=%d, available=%s}",
-                productId, name, type, price, quantity.get(), isAvailable());
+        return String.format("%s - %s ($%.2f) [%s, %d cal]",
+                productId, name, price, type.getDisplayName(), calories);
     }
 }
+

@@ -1,25 +1,27 @@
 package org.example.interfaces;
 
 /**
- * Interface Segregation Principle:
- * Separate interface for entities that can be dispensed from vending machine
+ * Interface for items that can be dispensed
  */
 public interface Dispensable {
     /**
-     * Dispense the item
-     * @return true if dispensing was successful, false otherwise
+     * Get unique identifier
      */
-    boolean dispense();
-
+    String getId();
+    
     /**
-     * Check if the item is available for dispensing
-     * @return true if available, false otherwise
-     */
-    boolean isAvailable();
-
-    /**
-     * Get the name of the dispensable item
-     * @return item name
+     * Get name of the item
      */
     String getName();
+    
+    /**
+     * Get price of the item
+     */
+    double getPrice();
+    
+    /**
+     * Check if item is available
+     */
+    boolean isAvailable();
 }
+

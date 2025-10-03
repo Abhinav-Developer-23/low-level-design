@@ -1,54 +1,67 @@
 package org.example.strategies.payment;
 
-import org.example.enums.TransactionStatus;
+import org.example.enums.PaymentMethod;
 import org.example.interfaces.PaymentStrategy;
-import org.example.model.Transaction;
 
 /**
- * Strategy Pattern: Card-based payment processing
- * Simulates card payment validation and processing
+ * Card payment strategy - credit/debit cards
  */
 public class CardPaymentStrategy implements PaymentStrategy {
-
+    
     @Override
-    public boolean processPayment(Transaction transaction) {
-        // Simulate card payment processing
-        // In a real implementation, this would integrate with payment gateway
-
-        double requiredAmount = transaction.getRequiredAmount();
-
-        // Simulate payment processing with 95% success rate
-        boolean paymentSuccessful = Math.random() > 0.05;
-
-        if (paymentSuccessful && requiredAmount > 0) {
-            transaction.setStatus(TransactionStatus.COMPLETED);
-            return true;
-        } else {
-            transaction.setStatus(TransactionStatus.FAILED);
+    public boolean processPayment(double amount) {
+        if (amount <= 0) {
             return false;
         }
+        
+        System.out.println("💳 Processing card payment: $" + String.format("%.2f", amount));
+        
+        // Simulate card processing
+        try {
+            Thread.sleep(300); // Simulate network delay
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+        
+        // In real implementation:
+        // 1. Connect to payment gateway
+        // 2. Validate card
+        // 3. Process transaction
+        // 4. Wait for approval
+        
+        // For demo, we simulate 95% success rate
+        boolean success = Math.random() < 0.95;
+        
+        if (success) {
+            System.out.println("✓ Card payment approved");
+        } else {
+            System.out.println("❌ Card payment declined");
+        }
+        
+        return success;
     }
 
     @Override
-    public boolean processRefund(Transaction transaction) {
-        // Simulate refund processing
-        // In a real implementation, this would process refund through payment gateway
-
-        if (transaction.getAmountPaid() > 0) {
-            transaction.setStatus(TransactionStatus.REFUNDED);
-            // For card payments, refund goes back to card (no physical change)
+    public boolean refundPayment(double amount) {
+        if (amount <= 0) {
             return true;
         }
-        return false;
+        
+        System.out.println("💳 Processing card refund: $" + String.format("%.2f", amount));
+        
+        // In real implementation, this would reverse the card transaction
+        return true;
     }
 
-    /**
-     * Validate card details (simplified validation)
-     */
-    public boolean validateCard(String cardNumber, String expiryDate, String cvv) {
-        // Basic validation - in real implementation would be more comprehensive
-        return cardNumber != null && cardNumber.length() >= 13 &&
-               expiryDate != null && expiryDate.length() == 5 &&
-               cvv != null && cvv.length() >= 3;
+    @Override
+    public PaymentMethod getPaymentMethod() {
+        return PaymentMethod.CARD;
+    }
+
+    @Override
+    public String getPaymentMethodName() {
+        return "Credit/Debit Card";
     }
 }
+

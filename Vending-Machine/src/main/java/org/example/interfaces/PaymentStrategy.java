@@ -1,23 +1,33 @@
 package org.example.interfaces;
 
-import org.example.model.Transaction;
+import org.example.enums.PaymentMethod;
 
 /**
- * Strategy Pattern: Interface for different payment processing strategies
- * Follows Interface Segregation Principle (ISP)
+ * Strategy Pattern: Different payment processing strategies
  */
 public interface PaymentStrategy {
     /**
-     * Process payment for a transaction
-     * @param transaction The transaction to process
-     * @return true if payment was successful, false otherwise
+     * Process payment
+     * @param amount Amount to charge
+     * @return true if payment successful
      */
-    boolean processPayment(Transaction transaction);
-
+    boolean processPayment(double amount);
+    
     /**
-     * Refund payment for a transaction
-     * @param transaction The transaction to refund
-     * @return true if refund was successful, false otherwise
+     * Process refund
+     * @param amount Amount to refund
+     * @return true if refund successful
      */
-    boolean processRefund(Transaction transaction);
+    boolean refundPayment(double amount);
+    
+    /**
+     * Get payment method type
+     */
+    PaymentMethod getPaymentMethod();
+    
+    /**
+     * Get display name for this payment method
+     */
+    String getPaymentMethodName();
 }
+

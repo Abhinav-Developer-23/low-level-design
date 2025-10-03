@@ -1,130 +1,187 @@
 # Vending Machine System - Low Level Design
 
-A comprehensive vending machine implementation demonstrating proper design patterns and SOLID principles.
+A comprehensive Vending Machine implementation demonstrating the **State Pattern** along with other design patterns and SOLID principles.
 
 ## Features
 
-✅ **Product Management**
-- Multiple product types (Beverages, Snacks, Candy)
-- Inventory tracking with automatic low-stock alerts
-- Product expiration monitoring
-- Restocking capabilities
+✅ **State-Based Machine Behavior**
+- Machine behavior changes based on current state
+- Smooth state transitions (Idle → Selecting → Payment → Dispensing)
+- Proper state validation and error handling
+
+✅ **Product & Inventory Management**
+- Add and restock products
+- Track inventory levels in real-time
+- Automatic low stock alerts
+- Thread-safe inventory operations
 
 ✅ **Payment Processing**
-- Coin-based payments with change calculation
-- Card payment support
-- Refund processing
-- Multiple payment strategies
+- Multiple payment methods (Cash, Card, Mobile)
+- Support for coins and bills
+- Automatic change calculation
+- Transaction cancellation and refunds
 
-✅ **Product Selection**
-- Code-based selection (e.g., "P001")
-- Name-based selection (e.g., "chips")
-- Pluggable selection strategies
-
-✅ **Transaction Management**
-- Thread-safe transaction processing
-- Transaction state tracking
-- Automatic failure handling and refunds
-
-✅ **Monitoring & Notifications**
+✅ **Notifications & Monitoring**
 - Real-time event notifications
-- Console logging observer
-- Maintenance monitoring with failure rate tracking
-- Low inventory alerts
+- Maintenance tracking and reporting
+- Revenue and transaction statistics
 
 ✅ **Thread Safety**
-- Concurrent access handling
-- Thread-safe collections (ConcurrentHashMap, CopyOnWriteArrayList)
-- Atomic counters (AtomicInteger, AtomicLong)
+- Thread-safe Singleton implementation
+- Concurrent data structures (ConcurrentHashMap, AtomicInteger)
 - Synchronized critical sections
 
 ## Design Patterns Used
 
-### 1. Singleton Pattern
+### 1. State Pattern ⭐ (Primary Pattern)
+**Classes:** `IdleState`, `SelectingState`, `PaymentState`, `DispensingState`
+
+The State Pattern is the core of this design. The vending machine changes its behavior based on its current state.
+
+```java
+// State interface
+public interface State {
+    void selectProduct(Product product);
+    void insertCoin(double amount);
+    void insertCard(String cardNumber, double amount);
+    void dispenseProduct();
+    void cancel();
+}
+
+// Usage
+VendingMachineSystem machine = VendingMachineSystem.getInstance();
+machine.selectProduct("A1");  // Transitions: Idle → Selecting
+machine.insertCoin(1.50);     // Transitions: Selecting → Payment → Dispensing
+```
+
+**States:**
+- **IdleState**: Waiting for customer interaction
+- **SelectingState**: Product selected, waiting for payment
+- **PaymentState**: Payment received, ready to dispense
+- **DispensingState**: Dispensing product and returning change
+
+**Benefits:**
+- ✅ Clean separation of state-specific behavior
+- ✅ Easy to add new states
+- ✅ Eliminates complex conditional logic
+- ✅ Each state is testable independently
+
+### 2. Singleton Pattern
 **Class:** `VendingMachineSystem`
 
-Ensures only one instance of the vending machine system exists. Uses double-checked locking for thread safety.
+Ensures only one instance of the vending machine exists. Uses thread-safe double-checked locking.
 
 ```java
 VendingMachineSystem machine = VendingMachineSystem.getInstance();
 ```
 
-### 2. Strategy Pattern
-**Interfaces:** `PaymentStrategy`, `ProductSelectionStrategy`
+### 3. Strategy Pattern
+**Interface:** `PaymentStrategy`
 
-**Implementations:**
-- Payment strategies: `CoinPaymentStrategy`, `CardPaymentStrategy`
-- Selection strategies: `BasicProductSelectionStrategy`, `NameBasedSelectionStrategy`
+**Implementations:** `CashPaymentStrategy`, `CardPaymentStrategy`, `MobilePaymentStrategy`
 
-Allows runtime selection of payment processing and product selection algorithms.
+Allows runtime selection of payment processing algorithm.
 
 ```java
-machine.setPaymentStrategy(new CardPaymentStrategy());
-machine.setSelectionStrategy(new NameBasedSelectionStrategy());
+// Different payment strategies can be used interchangeably
+PaymentStrategy cashPayment = new CashPaymentStrategy();
+PaymentStrategy cardPayment = new CardPaymentStrategy();
+PaymentStrategy mobilePayment = new MobilePaymentStrategy();
 ```
 
-### 3. Observer Pattern
+### 4. Observer Pattern
 **Interface:** `VendingMachineObserver`
 
 **Implementations:** `ConsoleVendingObserver`, `MaintenanceObserver`
 
-Notifies interested parties about vending machine events (product dispensed, payment received, etc.).
+Notifies interested parties about vending machine events.
 
 ```java
-machine.registerObserver(new ConsoleVendingObserver("LOG"));
+machine.registerObserver(new ConsoleVendingObserver("Console"));
 machine.registerObserver(new MaintenanceObserver());
 ```
 
-### 4. Template Method Pattern
-**Class:** `VendingItem` (abstract base class)
-
-Defines the skeleton of item validation in base class while allowing `Product` to provide specific implementations.
-
 ## SOLID Principles
 
-### Single Responsibility Principle (SRP)
+### Single Responsibility Principle (SRP) ✅
 Each class has one clear responsibility:
-- `Product` - manages product data and inventory
-- `Transaction` - represents a purchase transaction
-- `VendingMachineSystem` - orchestrates the vending machine operations
+- `Product` - represents a product
+- `Inventory` - manages stock
+- `Transaction` - represents a transaction
+- `State` implementations - handle state-specific behavior
+- `VendingMachineSystem` - orchestrates the system
 
-### Open/Closed Principle (OCP)
+### Open/Closed Principle (OCP) ✅
 System is open for extension but closed for modification:
-- New payment strategies can be added without modifying existing code
-- New selection strategies can be added without changing the selection mechanism
+- New states can be added without modifying existing states
+- New payment strategies can be added without changing payment processing
 - New observers can be added without modifying the notification system
 
-### Liskov Substitution Principle (LSP)
-All strategy implementations are interchangeable:
+### Liskov Substitution Principle (LSP) ✅
+All implementations are interchangeable:
+- Any `State` can replace another `State`
 - Any `PaymentStrategy` can replace another
-- Any `ProductSelectionStrategy` can replace another
 - Any `VendingMachineObserver` can replace another
 
-### Interface Segregation Principle (ISP)
+### Interface Segregation Principle (ISP) ✅
 Small, focused interfaces:
-- `PaymentStrategy` - only payment-related methods
-- `ProductSelectionStrategy` - only selection methods
+- `State` - only state transition methods
+- `PaymentStrategy` - only payment methods
 - `VendingMachineObserver` - only notification methods
-- `Dispensable` - only dispensing-related methods
 
-### Dependency Inversion Principle (DIP)
+### Dependency Inversion Principle (DIP) ✅
 High-level modules depend on abstractions:
-- `VendingMachineSystem` depends on `PaymentStrategy` interface, not concrete implementations
-- Selection functionality depends on `ProductSelectionStrategy` interface
+- `VendingMachineContext` depends on `State` interface
+- System depends on `PaymentStrategy` interface
 - Notification system depends on `VendingMachineObserver` interface
 
-## Thread Safety Features
+## Architecture Overview
 
-1. **Thread-safe Singleton:** Double-checked locking with volatile keyword
-2. **Concurrent Collections:**
-   - `ConcurrentHashMap` for products and transactions
-   - `CopyOnWriteArrayList` for observers
-3. **Atomic Counters:**
-   - `AtomicInteger` for product quantities
-   - `AtomicLong` for ID generation
-4. **Synchronized Methods:**
-   - Critical sections for transaction processing
-   - State changes and inventory updates
+```
+VendingMachineSystem (Singleton)
+         ↓
+VendingMachineContext (State Context)
+         ↓
+    State (interface)
+         ↓
+    +-----------+-----------+-----------+
+    |           |           |           |
+IdleState  SelectingState  PaymentState  DispensingState
+
+Inventory ← Thread-safe with ConcurrentHashMap + AtomicInteger
+    ↓
+  Product
+
+Transaction ← Immutable transaction records
+
+Observers ← ConsoleVendingObserver, MaintenanceObserver
+```
+
+## State Transition Diagram
+
+```
+┌─────────────┐
+│  IdleState  │ ←──────────────────────────────┐
+└──────┬──────┘                                 │
+       │ selectProduct()                        │
+       ↓                                        │
+┌─────────────────┐                            │
+│ SelectingState  │                             │
+└────────┬────────┘                            │
+         │ insertCoin() / insertCard()         │
+         │ (payment >= price)                  │
+         ↓                                      │
+┌─────────────────┐                            │
+│  PaymentState   │                             │
+└────────┬────────┘                            │
+         │ dispenseProduct()                    │
+         ↓                                      │
+┌─────────────────┐                            │
+│ DispensingState │ ───────────────────────────┘
+└─────────────────┘  (after dispensing)
+
+Note: cancel() from SelectingState returns to IdleState
+```
 
 ## Project Structure
 
@@ -133,31 +190,32 @@ Vending-Machine/
 ├── src/main/java/org/example/
 │   ├── enums/
 │   │   ├── MachineState.java
-│   │   ├── ProductType.java
 │   │   ├── CoinType.java
+│   │   ├── ProductType.java
 │   │   ├── PaymentMethod.java
 │   │   └── TransactionStatus.java
 │   ├── interfaces/
+│   │   ├── State.java ⭐
 │   │   ├── PaymentStrategy.java
-│   │   ├── ProductSelectionStrategy.java
-│   │   ├── VendingMachineObserver.java
-│   │   └── Dispensable.java
+│   │   └── VendingMachineObserver.java
 │   ├── model/
 │   │   ├── Product.java
-│   │   ├── Coin.java
-│   │   ├── Transaction.java
-│   │   └── VendingItem.java (abstract)
+│   │   ├── Inventory.java
+│   │   └── Transaction.java
+│   ├── states/ ⭐
+│   │   ├── IdleState.java
+│   │   ├── SelectingState.java
+│   │   ├── PaymentState.java
+│   │   └── DispensingState.java
 │   ├── strategies/
-│   │   ├── payment/
-│   │   │   ├── CoinPaymentStrategy.java
-│   │   │   └── CardPaymentStrategy.java
-│   │   └── selection/
-│   │       ├── BasicProductSelectionStrategy.java
-│   │       └── NameBasedSelectionStrategy.java
+│   │   ├── CashPaymentStrategy.java
+│   │   ├── CardPaymentStrategy.java
+│   │   └── MobilePaymentStrategy.java
 │   ├── observers/
 │   │   ├── ConsoleVendingObserver.java
 │   │   └── MaintenanceObserver.java
 │   ├── system/
+│   │   ├── VendingMachineContext.java ⭐
 │   │   └── VendingMachineSystem.java
 │   └── Main.java
 ├── README.md
@@ -167,30 +225,36 @@ Vending-Machine/
 ## Usage Example
 
 ```java
-// Get vending machine instance (Singleton)
+// Get singleton instance
 VendingMachineSystem machine = VendingMachineSystem.getInstance();
 
 // Register observers
-machine.registerObserver(new ConsoleVendingObserver("CONSOLE"));
+machine.registerObserver(new ConsoleVendingObserver("Console"));
 machine.registerObserver(new MaintenanceObserver());
 
-// Display available products
-machine.displayStatus();
+// Add products
+machine.addProduct("A1", "Coca Cola", 1.50, ProductType.BEVERAGE, 140, 5);
+machine.addProduct("B1", "Lays Chips", 2.00, ProductType.SNACK, 160, 4);
 
-// Select a product
-Transaction transaction = machine.selectProduct("P001");
-System.out.println("Selected: " + transaction.getProduct().getName());
+// Display inventory
+machine.displayInventory();
 
-// Insert coins
-machine.insertCoin(transaction, new Coin(CoinType.TWENTY_FIVE));
-machine.insertCoin(transaction, new Coin(CoinType.TWENTY_FIVE));
-machine.insertCoin(transaction, new Coin(CoinType.ONE));
+// Scenario 1: Cash purchase
+machine.selectProduct("A1");     // Select Coca Cola ($1.50)
+machine.insertCoin(0.50);        // Insert $0.50
+machine.insertCoin(0.50);        // Insert $0.50
+machine.insertCoin(0.50);        // Insert $0.50 - Total: $1.50
+// Product automatically dispensed when payment complete
 
-// Product is automatically dispensed with change
+// Scenario 2: Card purchase with change
+machine.selectProduct("B1");     // Select Lays Chips ($2.00)
+machine.insertCard("1234-5678-9012-3456", 2.50);  // Card payment
+// Product dispensed, change returned: $0.50
 
-// Try name-based selection
-machine.setSelectionStrategy(new NameBasedSelectionStrategy());
-Transaction chipsTransaction = machine.selectProduct("chips");
+// Scenario 3: Cancellation
+machine.selectProduct("A1");     // Select product
+machine.insertCoin(0.50);        // Partial payment
+machine.cancelTransaction();     // Cancel and refund
 ```
 
 ## Running the Demo
@@ -201,40 +265,69 @@ mvn clean compile
 mvn exec:java -Dexec.mainClass="org.example.Main"
 ```
 
-## Requirements Met
+## Thread Safety Features
 
-✅ Users can select products by code or name  
-✅ Multiple payment methods supported (coins, card)  
-✅ Change calculation and dispensing  
-✅ Inventory management with low-stock alerts  
-✅ Transaction processing with failure handling  
-✅ Real-time notifications and monitoring  
-✅ Thread-safe concurrent operations  
-✅ Proper design patterns implemented (Singleton, Strategy, Observer, Template Method)  
-✅ SOLID principles followed throughout the design  
+1. **Thread-safe Singleton:** Double-checked locking with volatile keyword
+2. **Concurrent Collections:**
+   - `ConcurrentHashMap` for product inventory
+   - `CopyOnWriteArrayList` for observer list
+3. **Atomic Counters:**
+   - `AtomicInteger` for stock counts
+   - `AtomicLong` for transaction ID generation
+4. **Synchronized Methods:**
+   - Critical sections for stock updates
+   - Transaction status updates
 
 ## Key Design Decisions
 
-1. **Abstract base classes:** `VendingItem` provides template for item validation
-2. **Strategy pattern for flexibility:** Payment and selection strategies are pluggable
-3. **Observer pattern for monitoring:** Multiple observers can monitor different aspects
-4. **Thread safety first:** All shared data structures are thread-safe
-5. **Immutable enums:** All enums are properly defined with validation
-6. **Defensive copying:** Collections returned from getters are copies
-7. **Fail-fast validation:** Input validation prevents invalid states
-8. **Clear separation of concerns:** Each class has a single responsibility
+1. **State Pattern as Core:** Machine behavior is state-driven, making code clean and maintainable
+2. **Automatic State Transitions:** States automatically transition when conditions are met
+3. **Immutable Products:** Thread-safe product definitions
+4. **Observer Pattern:** Loose coupling for notifications and monitoring
+5. **Strategy Pattern:** Flexible payment processing
+6. **Defensive Programming:** Null checks, validation, and error handling
+7. **Thread Safety First:** All shared data structures are thread-safe
+
+## Comparison with Stack Overflow Design
+
+This Vending Machine follows similar principles to the Stack Overflow system:
+
+| Aspect | Stack Overflow | Vending Machine |
+|--------|---------------|-----------------|
+| **Primary Pattern** | Template Method (Post hierarchy) | State Pattern (State transitions) |
+| **Singleton** | StackOverflowSystem | VendingMachineSystem |
+| **Strategy** | ReputationStrategy, SearchStrategy | PaymentStrategy |
+| **Observer** | NotificationObserver | VendingMachineObserver |
+| **Thread Safety** | ConcurrentHashMap, AtomicInteger | Same approach |
+| **SOLID** | All 5 principles | All 5 principles |
+
+## State Pattern Advantages
+
+1. **Clean Code:** No complex if-else chains
+2. **Easy to Extend:** Add new states without modifying existing ones
+3. **Testable:** Each state can be tested independently
+4. **Maintainable:** State-specific logic is encapsulated
+5. **Type Safe:** Compile-time checking of state transitions
 
 ## Future Enhancements
 
-- Add user authentication and loyalty programs
-- Implement product categories and filtering
-- Add temperature monitoring for perishable items
-- Implement sales analytics and reporting
-- Add remote monitoring and management
-- Implement energy-saving features
-- Add multi-language support
-- Implement touch screen interface simulation
+- Add temperature control for beverages
+- Implement dynamic pricing (time-based, demand-based)
+- Add touch screen UI interface
+- Implement remote monitoring dashboard
+- Add payment gateway integration
+- Implement loyalty program
+- Add product expiry tracking
+- Implement multi-currency support
 
 ## License
 
 This is a demonstration project for educational purposes.
+
+---
+
+**Design Patterns:** State ⭐, Singleton, Strategy, Observer  
+**SOLID Principles:** All 5 principles applied  
+**Thread Safety:** Complete thread-safe implementation  
+**Production Ready:** Yes, with proper error handling and validation
+

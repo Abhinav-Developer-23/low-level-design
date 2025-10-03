@@ -1,85 +1,62 @@
 package org.example.model;
 
-import java.time.LocalDateTime;
+import org.example.interfaces.Dispensable;
 
 /**
- * Abstract base class for vending machine items
- * Template Method Pattern: Provides common functionality for all vending items
+ * Wrapper for products with stock information
  */
-public abstract class VendingItem {
+public class VendingItem implements Dispensable {
+    private final Product product;
+    private int stockCount;
 
-    protected final String id;
-    protected final String name;
-    protected final double price;
-    protected final LocalDateTime createdAt;
-    protected LocalDateTime updatedAt;
-
-    protected VendingItem(String id, String name, double price) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
+    public VendingItem(Product product, int initialStock) {
+        this.product = product;
+        this.stockCount = initialStock;
     }
 
-    /**
-     * Template method for validating item availability
-     */
-    public final boolean isValidForPurchase() {
-        return isInStock() && !isExpired() && isPriceValid();
-    }
-
-    /**
-     * Hook method: Check if item is in stock
-     */
-    protected abstract boolean isInStock();
-
-    /**
-     * Hook method: Check if item is expired
-     */
-    protected abstract boolean isExpired();
-
-    /**
-     * Hook method: Validate price
-     */
-    protected boolean isPriceValid() {
-        return price > 0;
-    }
-
-    /**
-     * Abstract method: Get current quantity
-     */
-    public abstract int getQuantity();
-
-    /**
-     * Abstract method: Process dispensing
-     */
-    public abstract boolean dispense();
-
-    // Common getters
+    @Override
     public String getId() {
-        return id;
+        return product.getId();
     }
 
+    @Override
     public String getName() {
-        return name;
+        return product.getName();
     }
 
+    @Override
     public double getPrice() {
-        return price;
+        return product.getPrice();
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    @Override
+    public boolean isAvailable() {
+        return stockCount > 0;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public Product getProduct() {
+        return product;
+    }
+
+    public synchronized int getStockCount() {
+        return stockCount;
+    }
+
+    public synchronized boolean decrementStock() {
+        if (stockCount > 0) {
+            stockCount--;
+            return true;
+        }
+        return false;
+    }
+
+    public synchronized void incrementStock(int count) {
+        stockCount += count;
     }
 
     @Override
     public String toString() {
-        return String.format("%s{id='%s', name='%s', price=%.2f, inStock=%s}",
-                getClass().getSimpleName(), id, name, price, isInStock());
+        return product.toString() + " - Stock: " + stockCount;
     }
 }
+

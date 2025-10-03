@@ -1,12 +1,14 @@
 package org.example.enums;
 
 /**
- * Represents different types of products available in vending machine
+ * Categories of products available in vending machine
  */
 public enum ProductType {
-    SNACK("Snack"),
     BEVERAGE("Beverage"),
-    CANDY("Candy");
+    SNACK("Snack"),
+    CANDY("Candy"),
+    FOOD("Food"),
+    OTHER("Other");
 
     private final String displayName;
 
@@ -18,3 +20,4 @@ public enum ProductType {
         return displayName;
     }
 }
+

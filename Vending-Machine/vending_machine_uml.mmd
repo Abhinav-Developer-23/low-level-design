@@ -1,212 +1,422 @@
+```mermaid
 classDiagram
-    class VendingMachineSystem {
-        -instance: VendingMachineSystem
-        -products: Map~String, Product~
-        -activeTransactions: Map~String, Transaction~
-        -observers: List~VendingMachineObserver~
-        -currentState: MachineState
-        -coinInventory: Map~CoinType, Integer~
-        -paymentStrategy: PaymentStrategy
-        -selectionStrategy: ProductSelectionStrategy
-        +getInstance(): VendingMachineSystem
-        +selectProduct(productCode: String): Transaction
-        +insertCoin(transaction: Transaction, coin: Coin): void
-        +cancelTransaction(transaction: Transaction): void
-        +addProduct(product: Product): void
-        +restockProduct(productId: String, quantity: int): void
-        +registerObserver(observer: VendingMachineObserver): void
-        +setPaymentStrategy(strategy: PaymentStrategy): void
-        +setSelectionStrategy(strategy: ProductSelectionStrategy): void
-        +displayStatus(): void
+    %% State Pattern - Core Design
+    class State {
+        <<interface>>
+        +selectProduct(Product)
+        +insertCoin(double)
+        +insertCard(String, double)
+        +dispenseProduct()
+        +cancel()
+        +getStateName() String
     }
 
+    class IdleState {
+        -VendingMachineContext context
+        +selectProduct(Product)
+        +insertCoin(double)
+        +insertCard(String, double)
+        +dispenseProduct()
+        +cancel()
+        +getStateName() String
+    }
+
+    class SelectingState {
+        -VendingMachineContext context
+        +selectProduct(Product)
+        +insertCoin(double)
+        +insertCard(String, double)
+        +dispenseProduct()
+        +cancel()
+        +getStateName() String
+    }
+
+    class PaymentState {
+        -VendingMachineContext context
+        +selectProduct(Product)
+        +insertCoin(double)
+        +insertCard(String, double)
+        +dispenseProduct()
+        +cancel()
+        +getStateName() String
+    }
+
+    class DispensingState {
+        -VendingMachineContext context
+        +selectProduct(Product)
+        +insertCoin(double)
+        +insertCard(String, double)
+        +dispenseProduct()
+        +cancel()
+        +getStateName() String
+    }
+
+    State <|.. IdleState
+    State <|.. SelectingState
+    State <|.. PaymentState
+    State <|.. DispensingState
+
+    %% Context Class
+    class VendingMachineContext {
+        -State currentState
+        -Product selectedProduct
+        -double totalPaid
+        -boolean isCardPayment
+        -Inventory inventory
+        -List~VendingMachineObserver~ observers
+        -AtomicLong transactionIdCounter
+        +setState(State)
+        +getCurrentState() State
+        +selectProduct(Product)
+        +insertCoin(double)
+        +insertCard(String, double)
+        +dispenseProduct()
+        +cancel()
+        +registerObserver(VendingMachineObserver)
+        +notifyProductDispensed(Product, Transaction)
+        +notifyPaymentReceived(double, String)
+        +resetTransaction()
+    }
+
+    VendingMachineContext --> State : uses
+    IdleState --> VendingMachineContext : has reference
+    SelectingState --> VendingMachineContext : has reference
+    PaymentState --> VendingMachineContext : has reference
+    DispensingState --> VendingMachineContext : has reference
+
+    %% Singleton Pattern
+    class VendingMachineSystem {
+        -static volatile VendingMachineSystem instance
+        -VendingMachineContext context
+        -Inventory inventory
+        -VendingMachineSystem()
+        +getInstance()$ VendingMachineSystem
+        +addProduct(String, String, double, ProductType, int, int)
+        +selectProduct(String)
+        +insertCoin(double)
+        +insertCard(String, double)
+        +cancelTransaction()
+        +registerObserver(VendingMachineObserver)
+        +displayInventory()
+        +getCurrentState() String
+    }
+
+    VendingMachineSystem --> VendingMachineContext : contains
+    VendingMachineSystem --> Inventory : manages
+
+    %% Model Classes
     class Product {
-        -productId: String
-        -name: String
-        -type: ProductType
-        -price: double
-        -quantity: AtomicInteger
-        -expirationDate: LocalDateTime
-        +dispense(): boolean
-        +isAvailable(): boolean
-        +restock(amount: int): void
-        +isExpired(): boolean
+        -String productId
+        -String name
+        -double price
+        -ProductType type
+        -int calories
+        +getProductId() String
+        +getName() String
+        +getPrice() double
+        +getType() ProductType
+    }
+
+    class Inventory {
+        -ConcurrentHashMap~String, Product~ products
+        -ConcurrentHashMap~String, AtomicInteger~ stock
+        -int lowStockThreshold
+        +addProduct(Product, int)
+        +getProduct(String) Product
+        +getStock(String) int
+        +isAvailable(String) boolean
+        +isLowStock(String) boolean
+        +decrementStock(String) boolean
+        +incrementStock(String, int)
     }
 
     class Transaction {
-        -transactionId: String
-        -product: Product
-        -paymentMethod: PaymentMethod
-        -insertedCoins: List~Coin~
-        -status: TransactionStatus
-        -amountPaid: double
-        -changeCoins: List~Coin~
-        +addCoin(coin: Coin): void
-        +setStatus(status: TransactionStatus): void
-        +setChangeCoins(changeCoins: List~Coin~): void
-        +getAmountPaid(): double
-        +getRequiredAmount(): double
-        +getChangeAmount(): double
-        +isComplete(): boolean
+        -String transactionId
+        -Product product
+        -double amountPaid
+        -double changeReturned
+        -PaymentMethod paymentMethod
+        -LocalDateTime timestamp
+        -TransactionStatus status
+        +setStatus(TransactionStatus)
+        +getTransactionId() String
+        +getProduct() Product
+        +getAmountPaid() double
     }
 
-    class Coin {
-        -type: CoinType
-        -value: int
-        +getType(): CoinType
-        +getValue(): int
-    }
+    Inventory --> Product : manages
+    Transaction --> Product : references
+    VendingMachineContext --> Transaction : creates
 
-    class VendingItem {
-        <<abstract>>
-        #id: String
-        #name: String
-        #price: double
-        #createdAt: LocalDateTime
-        #updatedAt: LocalDateTime
-        +isValidForPurchase(): boolean
-        +getId(): String
-        +getName(): String
-        +getPrice(): double
-        #isInStock(): boolean*
-        #isExpired(): boolean*
-        #isPriceValid(): boolean
-        #getQuantity(): int*
-        #dispense(): boolean*
-    }
-
+    %% Strategy Pattern
     class PaymentStrategy {
         <<interface>>
-        +processPayment(transaction: Transaction): boolean
-        +processRefund(transaction: Transaction): boolean
+        +processPayment(double) boolean
+        +refundPayment(double) boolean
+        +getPaymentMethodName() String
     }
 
-    class CoinPaymentStrategy {
-        +processPayment(transaction: Transaction): boolean
-        +processRefund(transaction: Transaction): boolean
-        -calculateChange(changeAmount: double): List~Coin~
+    class CashPaymentStrategy {
+        -double totalReceived
+        +processPayment(double) boolean
+        +refundPayment(double) boolean
+        +getPaymentMethodName() String
+        +getTotalReceived() double
+        +reset()
     }
 
     class CardPaymentStrategy {
-        +processPayment(transaction: Transaction): boolean
-        +processRefund(transaction: Transaction): boolean
-        +validateCard(cardNumber: String, expiryDate: String, cvv: String): boolean
+        -String lastCardNumber
+        -double lastAmount
+        +processPayment(double) boolean
+        +refundPayment(double) boolean
+        +getPaymentMethodName() String
+        +setCardNumber(String)
     }
 
-    class ProductSelectionStrategy {
-        <<interface>>
-        +selectProduct(products: List~Product~, criteria: String): Product
+    class MobilePaymentStrategy {
+        -String mobileNumber
+        -String transactionId
+        +processPayment(double) boolean
+        +refundPayment(double) boolean
+        +getPaymentMethodName() String
+        +setMobileNumber(String)
     }
 
-    class BasicProductSelectionStrategy {
-        +selectProduct(products: List~Product~, criteria: String): Product
-    }
+    PaymentStrategy <|.. CashPaymentStrategy
+    PaymentStrategy <|.. CardPaymentStrategy
+    PaymentStrategy <|.. MobilePaymentStrategy
 
-    class NameBasedSelectionStrategy {
-        +selectProduct(products: List~Product~, criteria: String): Product
-        +selectProducts(products: List~Product~, criteria: String): List~Product~
-    }
-
+    %% Observer Pattern
     class VendingMachineObserver {
         <<interface>>
-        +onProductDispensed(product: Product, transaction: Transaction): void
-        +onPaymentReceived(transaction: Transaction): void
-        +onTransactionFailed(transaction: Transaction, reason: String): void
-        +onRefundProcessed(transaction: Transaction, amount: double): void
+        +onProductDispensed(Product, Transaction)
+        +onPaymentReceived(double, String)
+        +onProductOutOfStock(Product)
+        +onChangeReturned(double)
+        +onMaintenanceRequired(String)
     }
 
     class ConsoleVendingObserver {
-        -observerId: String
-        +ConsoleVendingObserver(observerId: String)
-        +onProductDispensed(product: Product, transaction: Transaction): void
-        +onPaymentReceived(transaction: Transaction): void
-        +onTransactionFailed(transaction: Transaction, reason: String): void
-        +onRefundProcessed(transaction: Transaction, amount: double): void
-        +getObserverId(): String
+        -String observerName
+        +onProductDispensed(Product, Transaction)
+        +onPaymentReceived(double, String)
+        +onProductOutOfStock(Product)
+        +onChangeReturned(double)
+        +onMaintenanceRequired(String)
     }
 
     class MaintenanceObserver {
-        -totalTransactions: AtomicInteger
-        -failedTransactions: AtomicInteger
-        -lowInventoryAlerts: AtomicInteger
-        +onProductDispensed(product: Product, transaction: Transaction): void
-        +onPaymentReceived(transaction: Transaction): void
-        +onTransactionFailed(transaction: Transaction, reason: String): void
-        +onRefundProcessed(transaction: Transaction, amount: double): void
-        +getTotalTransactions(): int
-        +getFailedTransactions(): int
-        +getFailureRate(): double
-        +getLowInventoryAlerts(): int
+        -List~String~ maintenanceLog
+        -List~String~ outOfStockProducts
+        -int totalTransactions
+        -double totalRevenue
+        +onProductDispensed(Product, Transaction)
+        +onPaymentReceived(double, String)
+        +onProductOutOfStock(Product)
+        +onChangeReturned(double)
+        +onMaintenanceRequired(String)
+        +printMaintenanceReport()
     }
 
-    class Dispensable {
-        <<interface>>
-        +dispense(): boolean
-        +isAvailable(): boolean
-        +getName(): String
-    }
+    VendingMachineObserver <|.. ConsoleVendingObserver
+    VendingMachineObserver <|.. MaintenanceObserver
+    VendingMachineContext --> VendingMachineObserver : notifies
 
     %% Enums
     class MachineState {
         <<enumeration>>
         IDLE
         SELECTING
-        PAYING
+        PAYMENT
         DISPENSING
-        REFUNDING
-        OUT_OF_ORDER
+        MAINTENANCE
     }
 
     class ProductType {
         <<enumeration>>
-        SNACK
         BEVERAGE
+        SNACK
         CANDY
-    }
-
-    class CoinType {
-        <<enumeration>>
-        ONE
-        FIVE
-        TEN
-        TWENTY_FIVE
+        FOOD
+        OTHER
     }
 
     class PaymentMethod {
         <<enumeration>>
-        COINS
+        CASH
         CARD
-        DIGITAL_WALLET
+        MOBILE
     }
 
     class TransactionStatus {
         <<enumeration>>
         PENDING
-        PROCESSING
         COMPLETED
         FAILED
         REFUNDED
+        CANCELLED
     }
 
-    %% Relationships
-    VendingMachineSystem ||--o{ Product : manages
-    VendingMachineSystem ||--o{ Transaction : manages
-    VendingMachineSystem ||--o{ VendingMachineObserver : notifies
-    VendingMachineSystem --> PaymentStrategy : uses
-    VendingMachineSystem --> ProductSelectionStrategy : uses
+    class CoinType {
+        <<enumeration>>
+        PENNY
+        NICKEL
+        DIME
+        QUARTER
+        DOLLAR
+        +getValue() double
+    }
 
-    Product ..|> Dispensable : implements
-    Product ..|> VendingItem : extends
+    Product --> ProductType : uses
+    Transaction --> PaymentMethod : uses
+    Transaction --> TransactionStatus : uses
 
-    VendingItem <|-- Product : extends
+    %% Main Class
+    class Main {
+        +main(String[])$
+    }
 
-    Transaction *-- Coin : contains
+    Main --> VendingMachineSystem : uses
+    Main --> ConsoleVendingObserver : creates
+    Main --> MaintenanceObserver : creates
+```
 
-    PaymentStrategy <|.. CoinPaymentStrategy : implements
-    PaymentStrategy <|.. CardPaymentStrategy : implements
+## State Transition Diagram
 
-    ProductSelectionStrategy <|.. BasicProductSelectionStrategy : implements
-    ProductSelectionStrategy <|.. NameBasedSelectionStrategy : implements
+```mermaid
+stateDiagram-v2
+    [*] --> IdleState: Initialize
+    
+    IdleState --> SelectingState: selectProduct()
+    IdleState --> IdleState: insertCoin() [rejected]
+    IdleState --> IdleState: cancel() [nothing to cancel]
+    
+    SelectingState --> SelectingState: insertCoin() [insufficient]
+    SelectingState --> PaymentState: insertCoin() [payment complete]
+    SelectingState --> PaymentState: insertCard() [payment complete]
+    SelectingState --> IdleState: cancel() [refund]
+    
+    PaymentState --> DispensingState: dispenseProduct()
+    
+    DispensingState --> IdleState: [dispensing complete]
+    DispensingState --> IdleState: [error, refund]
+    
+    note right of IdleState
+        Waiting for customer
+        Can: select product
+        Cannot: insert money, dispense
+    end note
+    
+    note right of SelectingState
+        Product selected
+        Can: insert money, cancel
+        Cannot: select another product
+    end note
+    
+    note right of PaymentState
+        Payment received
+        Can: dispense
+        Cannot: cancel
+    end note
+    
+    note right of DispensingState
+        Dispensing product
+        Cannot: cancel, add money
+        Auto-returns to Idle
+    end note
+```
 
-    VendingMachineObserver <|.. ConsoleVendingObserver : implements
-    VendingMachineObserver <|.. MaintenanceObserver : implements
+## Component Interaction
+
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant System as VendingMachineSystem
+    participant Context as VendingMachineContext
+    participant IdleState
+    participant SelectingState
+    participant PaymentState
+    participant DispensingState
+    participant Inventory
+    participant Observer
+
+    Customer->>System: selectProduct("A1")
+    System->>Context: selectProduct(product)
+    Context->>IdleState: selectProduct(product)
+    IdleState->>Inventory: isAvailable("A1")
+    Inventory-->>IdleState: true
+    IdleState->>Context: setState(SelectingState)
+    IdleState-->>Customer: Product selected
+
+    Customer->>System: insertCoin(1.50)
+    System->>Context: insertCoin(1.50)
+    Context->>SelectingState: insertCoin(1.50)
+    SelectingState->>SelectingState: totalPaid >= price?
+    SelectingState->>Context: setState(PaymentState)
+    SelectingState->>Context: dispenseProduct()
+    Context->>PaymentState: dispenseProduct()
+    PaymentState->>Context: setState(DispensingState)
+    PaymentState->>Context: dispenseProduct()
+    
+    Context->>DispensingState: dispenseProduct()
+    DispensingState->>Inventory: decrementStock("A1")
+    DispensingState->>Observer: onProductDispensed(product, transaction)
+    DispensingState->>Observer: onPaymentReceived(1.50, "CASH")
+    DispensingState->>Context: setState(IdleState)
+    DispensingState-->>Customer: Product dispensed
+```
+
+## Design Patterns Overview
+
+```mermaid
+graph TB
+    subgraph "State Pattern (Core)"
+        State[State Interface]
+        Idle[IdleState]
+        Selecting[SelectingState]
+        Payment[PaymentState]
+        Dispensing[DispensingState]
+        Context[VendingMachineContext]
+        
+        State --> Idle
+        State --> Selecting
+        State --> Payment
+        State --> Dispensing
+        Context --> State
+    end
+    
+    subgraph "Singleton Pattern"
+        System[VendingMachineSystem]
+    end
+    
+    subgraph "Strategy Pattern"
+        PayStrategy[PaymentStrategy Interface]
+        Cash[CashPaymentStrategy]
+        Card[CardPaymentStrategy]
+        Mobile[MobilePaymentStrategy]
+        
+        PayStrategy --> Cash
+        PayStrategy --> Card
+        PayStrategy --> Mobile
+    end
+    
+    subgraph "Observer Pattern"
+        ObsInterface[VendingMachineObserver]
+        Console[ConsoleVendingObserver]
+        Maintenance[MaintenanceObserver]
+        
+        ObsInterface --> Console
+        ObsInterface --> Maintenance
+    end
+    
+    System --> Context
+    Context --> ObsInterface
+    
+    style State fill:#ff9999
+    style Context fill:#ff9999
+    style System fill:#99ccff
+    style PayStrategy fill:#99ff99
+    style ObsInterface fill:#ffff99
+```
+

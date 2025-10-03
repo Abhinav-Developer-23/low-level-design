@@ -1,30 +1,36 @@
 package org.example.enums;
 
 /**
- * Represents different coin denominations accepted by the vending machine
+ * Represents different coin/bill denominations
  */
 public enum CoinType {
-    ONE(1),
-    FIVE(5),
-    TEN(10),
-    TWENTY_FIVE(25);
+    PENNY(0.01),
+    NICKEL(0.05),
+    DIME(0.10),
+    QUARTER(0.25),
+    HALF_DOLLAR(0.50),
+    DOLLAR(1.00),
+    FIVE_DOLLAR(5.00),
+    TEN_DOLLAR(10.00),
+    TWENTY_DOLLAR(20.00);
 
-    private final int value;
+    private final double value;
 
-    CoinType(int value) {
+    CoinType(double value) {
         this.value = value;
     }
 
-    public int getValue() {
+    public double getValue() {
         return value;
     }
 
-    public static CoinType fromValue(int value) {
+    public static CoinType fromValue(double value) {
         for (CoinType coin : values()) {
-            if (coin.value == value) {
+            if (Math.abs(coin.value - value) < 0.001) {
                 return coin;
             }
         }
-        throw new IllegalArgumentException("Invalid coin value: " + value);
+        return null;
     }
 }
+

@@ -1,14 +1,13 @@
 package org.example.states;
 
-import org.example.enums.PaymentMethod;
+import org.example.enums.CoinType;
 import org.example.interfaces.State;
-import org.example.model.Product;
+import org.example.model.Coin;
 import org.example.system.VendingMachineContext;
 
 /**
- * Selecting State: Product selected, waiting for payment
- * Valid operations: insertCoin, insertCard, insertMobilePayment, cancel
- * Invalid operations: selectProduct (must cancel first), dispenseProduct
+ * Concrete state class representing the product selection state.
+ * In this state, the user has selected a product and can insert coins or change selection.
  */
 public class SelectingState implements State {
     private final VendingMachineContext context;
@@ -18,126 +17,76 @@ public class SelectingState implements State {
     }
 
     @Override
-    public void selectProduct(Product product) {
-        System.out.println("❌ Product already selected. Please complete payment or cancel transaction.");
-    }
-
-    @Override
-    public void insertCoin(double amount) {
-        if (amount <= 0) {
-            System.out.println("❌ Invalid amount");
-            return;
-        }
-
-        // Add to total paid
-        context.addPayment(amount);
-        context.setPaymentMethod(PaymentMethod.CASH);
-        
-        double totalPaid = context.getTotalPaid();
-        double price = context.getSelectedProduct().getPrice();
-        
-        System.out.println("✓ Inserted: $" + String.format("%.2f", amount) + 
-                          " | Total: $" + String.format("%.2f", totalPaid));
-        
-        context.notifyPaymentReceived(amount, "CASH");
-        
-        if (totalPaid >= price) {
-            // Payment complete, transition to Payment state
-            System.out.println("✓ Payment complete!");
-            context.setState(new PaymentState(context));
-            
-            // Automatically proceed to dispensing
-            context.dispenseProduct();
+    public void selectProduct(String productId) {
+        if (context.getInventory().isProductAvailable(productId)) {
+            // Cancel current transaction and start new one
+            if (context.getCurrentTransaction() != null) {
+                context.cancelCurrentTransaction();
+            }
+            context.setCurrentTransaction(context.createTransaction(productId));
+            System.out.println("Product changed to " + productId + ". Please proceed to payment.");
         } else {
-            double remaining = price - totalPaid;
-            System.out.println("💡 Please insert $" + String.format("%.2f", remaining) + " more");
+            System.out.println("Product " + productId + " is not available.");
         }
     }
 
     @Override
-    public void insertCard(String cardNumber, double amount) {
-        Product product = context.getSelectedProduct();
-        double price = product.getPrice();
-        
-        if (amount < price) {
-            System.out.println("❌ Insufficient amount. Required: $" + String.format("%.2f", price));
-            return;
-        }
-        
-        System.out.println("✓ Processing card payment: $" + String.format("%.2f", amount));
-        
-        // Process card payment through strategy
-        if (context.processCardPayment(cardNumber, amount)) {
-            context.setTotalPaid(amount);
-            context.setPaymentMethod(PaymentMethod.CARD);
-            context.notifyPaymentReceived(amount, "CARD");
-            
-            System.out.println("✓ Card payment successful!");
-            
-            // Transition to Payment state
-            context.setState(new PaymentState(context));
-            
-            // Automatically proceed to dispensing
-            context.dispenseProduct();
+    public void insertCoin(int coinValue) {
+        // Convert coin value to CoinType for validation
+        CoinType coinType = getCoinTypeFromValue(coinValue);
+        if (coinType != null) {
+            Coin coin = new Coin(coinType);
+            context.getCurrentTransaction().addCoin(coin);
+            System.out.println("Inserted: " + coin);
+
+            // Check if payment is complete
+            if (context.getCurrentTransaction().isPaymentComplete()) {
+                context.setCurrentState(new PaymentState(context));
+                System.out.println("Payment complete. Processing transaction...");
+                processPayment();
+            } else {
+                int remaining = context.getCurrentTransaction().getProductPrice() -
+                              context.getCurrentTransaction().getTotalInsertedAmount();
+                System.out.println("Please insert " + remaining + " more cents.");
+            }
         } else {
-            System.out.println("❌ Card payment failed. Please try again.");
+            System.out.println("Invalid coin value: " + coinValue + " cents");
         }
     }
 
     @Override
-    public void insertMobilePayment(String paymentId, double amount) {
-        Product product = context.getSelectedProduct();
-        double price = product.getPrice();
-        
-        if (amount < price) {
-            System.out.println("❌ Insufficient amount. Required: $" + String.format("%.2f", price));
-            return;
-        }
-        
-        System.out.println("✓ Processing mobile payment: $" + String.format("%.2f", amount));
-        
-        // Process mobile payment through strategy
-        if (context.processMobilePayment(paymentId, amount)) {
-            context.setTotalPaid(amount);
-            context.setPaymentMethod(PaymentMethod.MOBILE);
-            context.notifyPaymentReceived(amount, "MOBILE");
-            
-            System.out.println("✓ Mobile payment successful!");
-            
-            // Transition to Payment state
-            context.setState(new PaymentState(context));
-            
-            // Automatically proceed to dispensing
-            context.dispenseProduct();
+    public void processPayment() {
+        if (context.getCurrentTransaction().isPaymentComplete()) {
+            context.setCurrentState(new PaymentState(context));
+            context.getCurrentState().processPayment();
         } else {
-            System.out.println("❌ Mobile payment failed. Please try again.");
+            System.out.println("Payment not complete. Please insert more coins.");
         }
     }
 
     @Override
     public void dispenseProduct() {
-        System.out.println("❌ Please complete payment first");
+        System.out.println("Payment required before dispensing product.");
     }
 
     @Override
-    public void cancel() {
-        double refund = context.getTotalPaid();
-        
-        if (refund > 0) {
-            System.out.println("✓ Transaction cancelled. Refunding: $" + String.format("%.2f", refund));
-            context.notifyTransactionCancelled(refund);
-        } else {
-            System.out.println("✓ Transaction cancelled");
-        }
-        
-        // Reset and return to idle
-        context.resetTransaction();
-        context.setState(new IdleState(context));
+    public void cancelTransaction() {
+        System.out.println("Transaction cancelled. Returning coins...");
+        context.cancelCurrentTransaction();
+        context.setCurrentState(new IdleState(context));
     }
 
     @Override
     public String getStateName() {
         return "SELECTING";
     }
-}
 
+    private CoinType getCoinTypeFromValue(int value) {
+        for (CoinType type : CoinType.values()) {
+            if (type.getValue() == value) {
+                return type;
+            }
+        }
+        return null;
+    }
+}

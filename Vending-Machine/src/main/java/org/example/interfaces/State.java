@@ -1,45 +1,37 @@
 package org.example.interfaces;
 
-import org.example.model.Product;
-
 /**
- * State Pattern: Interface for all vending machine states
- * Each state handles operations differently based on current machine state
+ * Interface for state design pattern implementation.
+ * Defines the behavior for different states of the vending machine.
  */
 public interface State {
     /**
-     * Handle product selection
+     * Handle product selection in the current state.
      */
-    void selectProduct(Product product);
-    
+    void selectProduct(String productId);
+
     /**
-     * Handle coin/cash insertion
+     * Handle coin insertion in the current state.
      */
-    void insertCoin(double amount);
-    
+    void insertCoin(int coinValue);
+
     /**
-     * Handle card payment
+     * Handle payment processing in the current state.
      */
-    void insertCard(String cardNumber, double amount);
-    
+    void processPayment();
+
     /**
-     * Handle mobile payment
-     */
-    void insertMobilePayment(String paymentId, double amount);
-    
-    /**
-     * Dispense the product
+     * Handle product dispensing in the current state.
      */
     void dispenseProduct();
-    
+
     /**
-     * Cancel current transaction
+     * Handle transaction cancellation in the current state.
      */
-    void cancel();
-    
+    void cancelTransaction();
+
     /**
-     * Get the name of current state
+     * Get the current state name.
      */
     String getStateName();
 }
-

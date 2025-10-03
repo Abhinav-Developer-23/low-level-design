@@ -1,33 +1,23 @@
 package org.example.interfaces;
 
-import org.example.enums.PaymentMethod;
+import org.example.model.Transaction;
 
 /**
- * Strategy Pattern: Different payment processing strategies
+ * Strategy interface for handling different payment methods in the vending machine.
  */
 public interface PaymentStrategy {
     /**
-     * Process payment
-     * @param amount Amount to charge
-     * @return true if payment successful
+     * Process the payment for the given transaction.
+     *
+     * @param transaction The transaction to process payment for
+     * @return true if payment was successful, false otherwise
      */
-    boolean processPayment(double amount);
-    
-    /**
-     * Process refund
-     * @param amount Amount to refund
-     * @return true if refund successful
-     */
-    boolean refundPayment(double amount);
-    
-    /**
-     * Get payment method type
-     */
-    PaymentMethod getPaymentMethod();
-    
-    /**
-     * Get display name for this payment method
-     */
-    String getPaymentMethodName();
-}
+    boolean processPayment(Transaction transaction);
 
+    /**
+     * Get the payment method supported by this strategy.
+     *
+     * @return The payment method
+     */
+    String getPaymentMethod();
+}

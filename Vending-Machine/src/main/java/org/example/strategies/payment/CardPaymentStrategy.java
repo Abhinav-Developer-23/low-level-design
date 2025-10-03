@@ -1,67 +1,42 @@
 package org.example.strategies.payment;
 
-import org.example.enums.PaymentMethod;
 import org.example.interfaces.PaymentStrategy;
+import org.example.model.Transaction;
 
 /**
- * Card payment strategy - credit/debit cards
+ * Concrete strategy for handling card payments.
  */
 public class CardPaymentStrategy implements PaymentStrategy {
-    
+
     @Override
-    public boolean processPayment(double amount) {
-        if (amount <= 0) {
-            return false;
-        }
-        
-        System.out.println("💳 Processing card payment: $" + String.format("%.2f", amount));
-        
-        // Simulate card processing
+    public boolean processPayment(Transaction transaction) {
         try {
-            Thread.sleep(300); // Simulate network delay
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            // In a real system, this would integrate with a card payment processor
+            // For this demo, we'll simulate card validation
+            System.out.println("Processing card payment for " + transaction.getProductId());
+            System.out.println("Card authorization in progress...");
+
+            // Simulate card processing delay
+            Thread.sleep(1000);
+
+            // Simulate successful authorization (90% success rate)
+            boolean authorized = Math.random() > 0.1;
+
+            if (authorized) {
+                System.out.println("Card payment authorized for " + transaction.getProductPrice() + " cents");
+                return true;
+            } else {
+                System.out.println("Card payment declined. Please try another payment method.");
+                return false;
+            }
+        } catch (Exception e) {
+            System.err.println("Error processing card payment: " + e.getMessage());
             return false;
         }
-        
-        // In real implementation:
-        // 1. Connect to payment gateway
-        // 2. Validate card
-        // 3. Process transaction
-        // 4. Wait for approval
-        
-        // For demo, we simulate 95% success rate
-        boolean success = Math.random() < 0.95;
-        
-        if (success) {
-            System.out.println("✓ Card payment approved");
-        } else {
-            System.out.println("❌ Card payment declined");
-        }
-        
-        return success;
     }
 
     @Override
-    public boolean refundPayment(double amount) {
-        if (amount <= 0) {
-            return true;
-        }
-        
-        System.out.println("💳 Processing card refund: $" + String.format("%.2f", amount));
-        
-        // In real implementation, this would reverse the card transaction
-        return true;
-    }
-
-    @Override
-    public PaymentMethod getPaymentMethod() {
-        return PaymentMethod.CARD;
-    }
-
-    @Override
-    public String getPaymentMethodName() {
-        return "Credit/Debit Card";
+    public String getPaymentMethod() {
+        return "CARD";
     }
 }
-

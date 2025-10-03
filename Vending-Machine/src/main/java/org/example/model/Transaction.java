@@ -2,47 +2,52 @@ package org.example.model;
 
 import org.example.enums.PaymentMethod;
 import org.example.enums.TransactionStatus;
-
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Immutable transaction record
+ * Model class representing a transaction in the vending machine.
  */
 public class Transaction {
     private final String transactionId;
-    private final Product product;
-    private final double amountPaid;
-    private final double changeReturned;
-    private final PaymentMethod paymentMethod;
-    private final TransactionStatus status;
     private final LocalDateTime timestamp;
+    private final String productId;
+    private final int productPrice;
+    private final List<Coin> insertedCoins;
+    private final PaymentMethod paymentMethod;
+    private TransactionStatus status;
+    private int totalInsertedAmount;
 
-    public Transaction(String transactionId, Product product, double amountPaid,
-                      double changeReturned, PaymentMethod paymentMethod,
-                      TransactionStatus status) {
+    public Transaction(String transactionId, String productId, int productPrice, PaymentMethod paymentMethod) {
         this.transactionId = transactionId;
-        this.product = product;
-        this.amountPaid = amountPaid;
-        this.changeReturned = changeReturned;
-        this.paymentMethod = paymentMethod;
-        this.status = status;
         this.timestamp = LocalDateTime.now();
+        this.productId = productId;
+        this.productPrice = productPrice;
+        this.paymentMethod = paymentMethod;
+        this.insertedCoins = new ArrayList<>();
+        this.status = TransactionStatus.PENDING;
+        this.totalInsertedAmount = 0;
     }
 
     public String getTransactionId() {
         return transactionId;
     }
 
-    public Product getProduct() {
-        return product;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
-    public double getAmountPaid() {
-        return amountPaid;
+    public String getProductId() {
+        return productId;
     }
 
-    public double getChangeReturned() {
-        return changeReturned;
+    public int getProductPrice() {
+        return productPrice;
+    }
+
+    public List<Coin> getInsertedCoins() {
+        return new ArrayList<>(insertedCoins);
     }
 
     public PaymentMethod getPaymentMethod() {
@@ -53,15 +58,37 @@ public class Transaction {
         return status;
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+    public void setStatus(TransactionStatus status) {
+        this.status = status;
+    }
+
+    public int getTotalInsertedAmount() {
+        return totalInsertedAmount;
+    }
+
+    public void addCoin(Coin coin) {
+        insertedCoins.add(coin);
+        totalInsertedAmount += coin.getValue();
+    }
+
+    public boolean isPaymentComplete() {
+        return totalInsertedAmount >= productPrice;
+    }
+
+    public int getChangeAmount() {
+        if (totalInsertedAmount > productPrice) {
+            return totalInsertedAmount - productPrice;
+        }
+        return 0;
+    }
+
+    public boolean needsRefund() {
+        return status == TransactionStatus.FAILED || status == TransactionStatus.CANCELLED;
     }
 
     @Override
     public String toString() {
-        return String.format("Transaction{id='%s', product=%s, paid=$%.2f, change=$%.2f, method=%s, status=%s, time=%s}",
-                transactionId, product.getName(), amountPaid, changeReturned, 
-                paymentMethod, status, timestamp);
+        return String.format("Transaction %s: %s for %s (%d cents) - Status: %s",
+                           transactionId, productId, paymentMethod, productPrice, status);
     }
 }
-

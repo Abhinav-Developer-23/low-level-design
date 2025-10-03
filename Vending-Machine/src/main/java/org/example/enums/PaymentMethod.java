@@ -1,21 +1,20 @@
 package org.example.enums;
 
 /**
- * Different payment methods supported
+ * Enum representing different payment methods supported by the vending machine.
  */
 public enum PaymentMethod {
-    CASH("Cash"),
-    CARD("Card"),
-    MOBILE("Mobile Payment");
+    CASH("Cash payment"),
+    CARD("Card payment"),
+    MOBILE("Mobile payment");
 
-    private final String displayName;
+    private final String description;
 
-    PaymentMethod(String displayName) {
-        this.displayName = displayName;
+    PaymentMethod(String description) {
+        this.description = description;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public String getDescription() {
+        return description;
     }
 }
-

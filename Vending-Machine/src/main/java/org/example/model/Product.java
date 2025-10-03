@@ -1,78 +1,75 @@
 package org.example.model;
 
 import org.example.enums.ProductType;
-import org.example.interfaces.Dispensable;
-
-import java.util.Objects;
 
 /**
- * Immutable Product class representing a vending machine product
+ * Model class representing a product in the vending machine.
  */
-public class Product implements Dispensable {
-    private final String productId;
-    private final String name;
-    private final double price;
+public class Product {
+    private final String id;
     private final ProductType type;
-    private final int calories;
+    private final String name;
+    private final int price;
+    private int quantity;
 
-    public Product(String productId, String name, double price, ProductType type, int calories) {
-        this.productId = productId;
-        this.name = name;
-        this.price = price;
+    public Product(String id, ProductType type, int quantity) {
+        this.id = id;
         this.type = type;
-        this.calories = calories;
+        this.name = type.getName();
+        this.price = type.getPriceInCents();
+        this.quantity = quantity;
     }
 
-    @Override
     public String getId() {
-        return productId;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public double getPrice() {
-        return price;
-    }
-
-    @Override
-    public boolean isAvailable() {
-        // Availability is checked through Inventory
-        return true;
-    }
-
-    public String getProductId() {
-        return productId;
+        return id;
     }
 
     public ProductType getType() {
         return type;
     }
 
-    public int getCalories() {
-        return calories;
+    public String getName() {
+        return name;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Product product = (Product) o;
-        return Objects.equals(productId, product.productId);
+    public int getPrice() {
+        return price;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(productId);
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public boolean isAvailable() {
+        return quantity > 0;
+    }
+
+    public void decrementQuantity() {
+        if (quantity > 0) {
+            quantity--;
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("%s - %s ($%.2f) [%s, %d cal]",
-                productId, name, price, type.getDisplayName(), calories);
+        return String.format("%s - %s (%d cents) [%d available]",
+                           id, name, price, quantity);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Product product = (Product) obj;
+        return id.equals(product.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 }
-

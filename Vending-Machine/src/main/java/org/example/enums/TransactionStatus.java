@@ -1,22 +1,23 @@
 package org.example.enums;
 
 /**
- * Transaction status tracking
+ * Enum representing the status of a vending machine transaction.
  */
 public enum TransactionStatus {
-    PENDING("Pending"),
-    COMPLETED("Completed"),
-    CANCELLED("Cancelled"),
-    FAILED("Failed");
+    PENDING("Transaction initiated"),
+    PROCESSING("Transaction being processed"),
+    COMPLETED("Transaction completed successfully"),
+    FAILED("Transaction failed"),
+    CANCELLED("Transaction cancelled"),
+    REFUNDING("Transaction being refunded");
 
-    private final String displayName;
+    private final String description;
 
-    TransactionStatus(String displayName) {
-        this.displayName = displayName;
+    TransactionStatus(String description) {
+        this.description = description;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public String getDescription() {
+        return description;
     }
 }
-

@@ -2,27 +2,25 @@ package org.example.strategies.selection;
 
 import org.example.interfaces.ProductSelectionStrategy;
 import org.example.model.Product;
-
-import java.util.Map;
+import java.util.List;
 
 /**
- * Basic product selection by product ID (e.g., "A1", "B2")
+ * Basic product selection strategy that selects products by exact slot ID match.
  */
 public class BasicProductSelectionStrategy implements ProductSelectionStrategy {
-    
+
     @Override
-    public Product selectProduct(String identifier, Map<String, Product> products) {
-        if (identifier == null || identifier.trim().isEmpty()) {
-            return null;
+    public Product selectProduct(List<Product> availableProducts, String criteria) {
+        for (Product product : availableProducts) {
+            if (product.getId().equalsIgnoreCase(criteria.trim())) {
+                return product;
+            }
         }
-        
-        // Direct lookup by product ID
-        return products.get(identifier.toUpperCase().trim());
+        return null;
     }
 
     @Override
-    public String getStrategyName() {
-        return "Basic Selection (Product ID)";
+    public String getSelectionMethod() {
+        return "SLOT_ID";
     }
 }
-

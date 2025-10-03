@@ -1,143 +1,161 @@
 package org.example.system;
 
-import org.example.enums.ProductType;
+import org.example.enums.PaymentMethod;
+import org.example.interfaces.PaymentStrategy;
 import org.example.interfaces.ProductSelectionStrategy;
 import org.example.interfaces.VendingMachineObserver;
-import org.example.model.Inventory;
 import org.example.model.Product;
-import org.example.states.IdleState;
-import org.example.strategies.selection.BasicProductSelectionStrategy;
+import org.example.strategies.payment.CardPaymentStrategy;
+import org.example.strategies.payment.CashPaymentStrategy;
+import org.example.strategies.payment.MobilePaymentStrategy;
+import org.example.strategies.selection.NameBasedSelectionStrategy;
 
 /**
- * Singleton Pattern: Single instance of the vending machine system
- * Thread-safe implementation using double-checked locking
+ * High-level facade class for the Vending Machine System.
+ * Provides a simplified interface for interacting with the vending machine.
  */
 public class VendingMachineSystem {
-    private static volatile VendingMachineSystem instance;
-    
     private final VendingMachineContext context;
-    private final Inventory inventory;
-    private ProductSelectionStrategy selectionStrategy;
 
-    private VendingMachineSystem() {
-        this.inventory = new Inventory(5); // Low stock threshold: 5
-        this.context = new VendingMachineContext(new IdleState(null), inventory);
-        
-        // Set the context reference in the initial state
-        this.context.setState(new IdleState(context));
-        
-        // Default selection strategy
-        this.selectionStrategy = new BasicProductSelectionStrategy();
+    public VendingMachineSystem() {
+        this.context = new VendingMachineContext();
     }
 
     /**
-     * Thread-safe singleton implementation using double-checked locking
+     * Display the current inventory of the vending machine.
      */
-    public static VendingMachineSystem getInstance() {
-        if (instance == null) {
-            synchronized (VendingMachineSystem.class) {
-                if (instance == null) {
-                    instance = new VendingMachineSystem();
+    public void displayInventory() {
+        context.displayInventory();
+    }
+
+    /**
+     * Select a product by slot ID.
+     *
+     * @param slotId The slot ID of the product to select
+     */
+    public void selectProductBySlot(String slotId) {
+        System.out.println("Selecting product by slot: " + slotId);
+        context.selectProduct(slotId);
+    }
+
+    /**
+     * Select a product by name or type.
+     *
+     * @param productName The name or type of the product to select
+     */
+    public void selectProductByName(String productName) {
+        System.out.println("Searching for product: " + productName);
+
+        // Temporarily switch to name-based selection strategy
+        ProductSelectionStrategy originalStrategy = context.getProductSelectionStrategy();
+        context.setProductSelectionStrategy(new NameBasedSelectionStrategy());
+
+        // Try to find and select the product
+        for (Product product : context.getInventory().getAllProducts().values()) {
+            if (product.getName().toLowerCase().contains(productName.toLowerCase()) ||
+                product.getType().name().toLowerCase().contains(productName.toLowerCase())) {
+                if (product.isAvailable()) {
+                    context.selectProduct(product.getId());
+                    context.setProductSelectionStrategy(originalStrategy);
+                    return;
                 }
             }
         }
-        return instance;
+
+        System.out.println("Product not found or not available: " + productName);
+        context.setProductSelectionStrategy(originalStrategy);
     }
 
-    // Product Management
-    public void addProduct(String productId, String name, double price, 
-                          ProductType type, int calories, int stock) {
-        Product product = new Product(productId, name, price, type, calories);
-        inventory.addProduct(product, stock);
-        System.out.println("✓ Product added: " + product);
+    /**
+     * Insert a coin into the vending machine.
+     *
+     * @param coinValue The value of the coin in cents
+     */
+    public void insertCoin(int coinValue) {
+        System.out.println("Inserting coin: " + coinValue + " cents");
+        context.insertCoin(coinValue);
     }
 
-    public void restockProduct(String productId, int quantity) {
-        inventory.restockProduct(productId, quantity);
-        Product product = inventory.getProduct(productId);
-        if (product != null) {
-            System.out.println("✓ Restocked: " + product.getName() + " + " + quantity + " units");
-        }
+    /**
+     * Set the payment method for the current transaction.
+     *
+     * @param paymentMethod The payment method to use
+     */
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        PaymentStrategy strategy = switch (paymentMethod) {
+            case CASH -> new CashPaymentStrategy();
+            case CARD -> new CardPaymentStrategy();
+            case MOBILE -> new MobilePaymentStrategy();
+        };
+
+        context.setPaymentStrategy(strategy);
+        System.out.println("Payment method set to: " + paymentMethod);
     }
 
-    // Selection Strategy
-    public void setSelectionStrategy(ProductSelectionStrategy strategy) {
-        this.selectionStrategy = strategy;
-        System.out.println("✓ Selection strategy changed to: " + strategy.getStrategyName());
+    /**
+     * Process the current payment.
+     */
+    public void processPayment() {
+        System.out.println("Processing payment...");
+        context.processPayment();
     }
 
-    // Machine Operations (delegated to context/states)
-    public void selectProduct(String productId) {
-        Product product = selectionStrategy.selectProduct(productId, inventory.getAllProducts());
-        
-        if (product == null) {
-            System.out.println("❌ Product not found: " + productId);
-            return;
-        }
-        
-        context.selectProduct(product);
-    }
-
-    public void insertCoin(double amount) {
-        context.insertCoin(amount);
-    }
-
-    public void insertCard(String cardNumber, double amount) {
-        context.insertCard(cardNumber, amount);
-    }
-
-    public void insertMobilePayment(String paymentId, double amount) {
-        context.insertMobilePayment(paymentId, amount);
-    }
-
+    /**
+     * Cancel the current transaction.
+     */
     public void cancelTransaction() {
-        context.cancel();
+        System.out.println("Cancelling transaction...");
+        context.cancelTransaction();
     }
 
-    // Observer management
-    public void registerObserver(VendingMachineObserver observer) {
-        context.registerObserver(observer);
-        System.out.println("✓ Observer registered: " + observer.getClass().getSimpleName());
+    /**
+     * Get the current machine status.
+     *
+     * @return String representation of the machine status
+     */
+    public String getMachineStatus() {
+        return context.getMachineStatus();
     }
 
-    public void removeObserver(VendingMachineObserver observer) {
-        context.removeObserver(observer);
+    /**
+     * Add a custom observer to the vending machine.
+     *
+     * @param observer The observer to add
+     */
+    public void addObserver(VendingMachineObserver observer) {
+        context.addObserver(observer);
     }
 
-    // Display methods
-    public void displayInventory() {
-        System.out.println(inventory.getInventorySummary());
-    }
-
-    public void displayStatus() {
-        System.out.println("\n" + "=".repeat(50));
-        System.out.println("🤖 VENDING MACHINE STATUS");
-        System.out.println("=".repeat(50));
-        System.out.println("Current State: " + context.getCurrentStateName());
-        
-        if (context.getSelectedProduct() != null) {
-            System.out.println("Selected Product: " + context.getSelectedProduct().getName());
-            System.out.println("Price: $" + context.getSelectedProduct().getPrice());
-            System.out.println("Amount Paid: $" + String.format("%.2f", context.getTotalPaid()));
-            double remaining = context.getSelectedProduct().getPrice() - context.getTotalPaid();
-            if (remaining > 0) {
-                System.out.println("Remaining: $" + String.format("%.2f", remaining));
-            }
-        }
-        
-        System.out.println("=".repeat(50) + "\n");
-    }
-
-    public String getCurrentState() {
-        return context.getCurrentStateName();
-    }
-
-    public Inventory getInventory() {
-        return inventory;
-    }
-
+    /**
+     * Get the vending machine context for advanced operations.
+     *
+     * @return The vending machine context
+     */
     public VendingMachineContext getContext() {
         return context;
     }
-}
 
+    /**
+     * Perform maintenance operations on the vending machine.
+     */
+    public void performMaintenance() {
+        System.out.println("Performing maintenance on " + context.getMachineId());
+        System.out.println("Checking inventory levels...");
+
+        int totalItems = 0;
+        int lowStockItems = 0;
+
+        for (Product product : context.getInventory().getAllProducts().values()) {
+            totalItems += product.getQuantity();
+            if (product.getQuantity() <= 2) {
+                lowStockItems++;
+                context.notifyObservers("onMaintenanceRequired",
+                    "Low stock for " + product.getName() + " - " + product.getQuantity() + " remaining");
+            }
+        }
+
+        System.out.println("Total items in inventory: " + totalItems);
+        System.out.println("Low stock items: " + lowStockItems);
+        System.out.println("Maintenance check complete.");
+    }
+}

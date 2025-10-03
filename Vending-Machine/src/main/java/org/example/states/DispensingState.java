@@ -3,13 +3,11 @@ package org.example.states;
 import org.example.enums.TransactionStatus;
 import org.example.interfaces.State;
 import org.example.model.Product;
-import org.example.model.Transaction;
 import org.example.system.VendingMachineContext;
 
 /**
- * Dispensing State: Actively dispensing product
- * Valid operations: dispenseProduct (actual dispensing)
- * Invalid operations: all other operations (must wait)
+ * Concrete state class representing the product dispensing state.
+ * In this state, the product is being dispensed to the customer.
  */
 public class DispensingState implements State {
     private final VendingMachineContext context;
@@ -19,83 +17,63 @@ public class DispensingState implements State {
     }
 
     @Override
-    public void selectProduct(Product product) {
-        System.out.println("❌ Please wait - dispensing in progress");
+    public void selectProduct(String productId) {
+        System.out.println("Product already being dispensed. Please wait.");
     }
 
     @Override
-    public void insertCoin(double amount) {
-        System.out.println("❌ Please wait - dispensing in progress");
+    public void insertCoin(int coinValue) {
+        System.out.println("Product dispensing in progress. Cannot accept coins.");
     }
 
     @Override
-    public void insertCard(String cardNumber, double amount) {
-        System.out.println("❌ Please wait - dispensing in progress");
-    }
-
-    @Override
-    public void insertMobilePayment(String paymentId, double amount) {
-        System.out.println("❌ Please wait - dispensing in progress");
+    public void processPayment() {
+        System.out.println("Payment already processed. Dispensing product...");
     }
 
     @Override
     public void dispenseProduct() {
-        Product product = context.getSelectedProduct();
-        double totalPaid = context.getTotalPaid();
-        double price = product.getPrice();
-        double change = totalPaid - price;
-        
-        System.out.println("\n" + "=".repeat(50));
-        System.out.println("🎁 DISPENSING: " + product.getName());
-        System.out.println("=".repeat(50));
-        
-        // Simulate dispensing
         try {
-            Thread.sleep(500); // Simulate mechanical dispensing
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        
-        // Decrement inventory
-        if (context.getInventory().decrementStock(product.getProductId())) {
-            System.out.println("✓ Product dispensed successfully!");
-            
-            // Return change if any
-            if (change > 0) {
-                System.out.println("💰 Change returned: $" + String.format("%.2f", change));
-                context.notifyChangeReturned(change);
+            String productId = context.getCurrentTransaction().getProductId();
+
+            // Dispense the product from inventory
+            Product dispensedProduct = context.getInventory().dispenseProduct(productId);
+
+            if (dispensedProduct != null) {
+                context.getCurrentTransaction().setStatus(TransactionStatus.COMPLETED);
+
+                // Calculate and return change if any
+                int change = context.getCurrentTransaction().getChangeAmount();
+                if (change > 0) {
+                    System.out.println("Dispensing product: " + dispensedProduct.getName());
+                    System.out.println("Returning change: " + change + " cents");
+                    context.returnChange(change);
+                } else {
+                    System.out.println("Dispensing product: " + dispensedProduct.getName());
+                }
+
+                // Notify observers
+                context.notifyObservers("Product dispensed: " + dispensedProduct.getName());
+
+                System.out.println("Transaction completed successfully!");
+            } else {
+                context.getCurrentTransaction().setStatus(TransactionStatus.FAILED);
+                System.out.println("Failed to dispense product. Please contact support.");
             }
-            
-            // Check if stock is low
-            int remainingStock = context.getInventory().getStockCount(product.getProductId());
-            if (context.getInventory().isLowStock(product.getProductId())) {
-                context.notifyProductLowStock(product, remainingStock);
-            }
-            
-            // Create transaction record
-            Transaction transaction = context.createTransaction(
-                    product, totalPaid, change, TransactionStatus.COMPLETED);
-            
-            context.notifyProductDispensed(product, transaction);
-            
-            System.out.println("=".repeat(50));
-            System.out.println("Thank you for your purchase! 😊");
-            System.out.println("=".repeat(50) + "\n");
-        } else {
-            System.out.println("❌ Error: Failed to dispense product");
-            // Refund
-            System.out.println("💰 Refunding: $" + String.format("%.2f", totalPaid));
-            context.notifyTransactionCancelled(totalPaid);
+
+            // Return to idle state
+            context.setCurrentState(new IdleState(context));
+
+        } catch (Exception e) {
+            context.getCurrentTransaction().setStatus(TransactionStatus.FAILED);
+            System.err.println("Error dispensing product: " + e.getMessage());
+            context.setCurrentState(new IdleState(context));
         }
-        
-        // Reset and return to idle state
-        context.resetTransaction();
-        context.setState(new IdleState(context));
     }
 
     @Override
-    public void cancel() {
-        System.out.println("❌ Cannot cancel - dispensing in progress");
+    public void cancelTransaction() {
+        System.out.println("Cannot cancel during dispensing. Please wait for completion.");
     }
 
     @Override
@@ -103,4 +81,3 @@ public class DispensingState implements State {
         return "DISPENSING";
     }
 }
-

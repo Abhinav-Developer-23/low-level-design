@@ -1,14 +1,14 @@
 package org.example.enums;
 
 /**
- * Represents the different states of the vending machine
- * Used in State Pattern implementation
+ * Enum representing the different states of the vending machine.
+ * Used in the State design pattern implementation.
  */
 public enum MachineState {
-    IDLE("Idle - Waiting for customer"),
-    SELECTING("Selecting - Product selected, awaiting payment"),
-    PAYMENT("Payment - Payment received, ready to dispense"),
-    DISPENSING("Dispensing - Dispensing product");
+    IDLE("Ready for product selection"),
+    SELECTING("Product selection in progress"),
+    PAYMENT("Payment processing"),
+    DISPENSING("Product dispensing in progress");
 
     private final String description;
 
@@ -20,4 +20,3 @@ public enum MachineState {
         return description;
     }
 }
-

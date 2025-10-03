@@ -1,57 +1,44 @@
 package org.example.observers;
 
 import org.example.interfaces.VendingMachineObserver;
-import org.example.model.Product;
-import org.example.model.Transaction;
 
 /**
- * Console logging observer for vending machine events
+ * Concrete observer that outputs vending machine events to the console.
  */
 public class ConsoleVendingObserver implements VendingMachineObserver {
-    private final String observerName;
 
-    public ConsoleVendingObserver(String observerName) {
-        this.observerName = observerName;
+    @Override
+    public void onProductSelected(String productId) {
+        System.out.println("[OBSERVER] Product selected: " + productId);
     }
 
     @Override
-    public void onProductDispensed(Product product, Transaction transaction) {
-        System.out.println("📢 [" + observerName + "] Product dispensed: " + product.getName() + 
-                          " | Transaction ID: " + transaction.getTransactionId());
+    public void onCoinInserted(int coinValue) {
+        System.out.println("[OBSERVER] Coin inserted: " + coinValue + " cents");
     }
 
     @Override
-    public void onPaymentReceived(double amount, String paymentMethod) {
-        System.out.println("📢 [" + observerName + "] Payment received: $" + 
-                          String.format("%.2f", amount) + " via " + paymentMethod);
+    public void onPaymentProcessed(int amount, String method) {
+        System.out.println("[OBSERVER] Payment processed: " + amount + " cents via " + method);
     }
 
     @Override
-    public void onChangeReturned(double changeAmount) {
-        System.out.println("📢 [" + observerName + "] Change returned: $" + 
-                          String.format("%.2f", changeAmount));
+    public void onProductDispensed(String productId) {
+        System.out.println("[OBSERVER] Product dispensed: " + productId);
     }
 
     @Override
-    public void onProductOutOfStock(Product product) {
-        System.out.println("📢 [" + observerName + "] ⚠️  Product out of stock: " + product.getName());
+    public void onTransactionCompleted(String transactionId) {
+        System.out.println("[OBSERVER] Transaction completed: " + transactionId);
     }
 
     @Override
-    public void onProductLowStock(Product product, int remainingStock) {
-        System.out.println("📢 [" + observerName + "] ⚠️  Low stock alert: " + product.getName() + 
-                          " - Only " + remainingStock + " remaining");
+    public void onTransactionFailed(String transactionId, String reason) {
+        System.out.println("[OBSERVER] Transaction failed: " + transactionId + " - Reason: " + reason);
     }
 
     @Override
-    public void onTransactionCancelled(double refundAmount) {
-        System.out.println("📢 [" + observerName + "] Transaction cancelled. Refund: $" + 
-                          String.format("%.2f", refundAmount));
-    }
-
-    @Override
-    public void onError(String errorMessage) {
-        System.out.println("📢 [" + observerName + "] ❌ Error: " + errorMessage);
+    public void onMaintenanceRequired(String message) {
+        System.out.println("[OBSERVER] Maintenance required: " + message);
     }
 }
-

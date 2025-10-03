@@ -1,45 +1,57 @@
 package org.example.interfaces;
 
-import org.example.model.Product;
-import org.example.model.Transaction;
-
 /**
- * Observer Pattern: Observers get notified of vending machine events
+ * Observer interface for vending machine events and notifications.
  */
 public interface VendingMachineObserver {
     /**
-     * Called when a product is dispensed
+     * Called when a product is selected.
+     *
+     * @param productId The ID of the selected product
      */
-    void onProductDispensed(Product product, Transaction transaction);
-    
-    /**
-     * Called when payment is received
-     */
-    void onPaymentReceived(double amount, String paymentMethod);
-    
-    /**
-     * Called when change is returned
-     */
-    void onChangeReturned(double changeAmount);
-    
-    /**
-     * Called when a product is out of stock
-     */
-    void onProductOutOfStock(Product product);
-    
-    /**
-     * Called when a product is low in stock
-     */
-    void onProductLowStock(Product product, int remainingStock);
-    
-    /**
-     * Called when transaction is cancelled
-     */
-    void onTransactionCancelled(double refundAmount);
-    
-    /**
-     * Called when an error occurs
-     */
-    void onError(String errorMessage);
-}
+    void onProductSelected(String productId);
 
+    /**
+     * Called when a coin is inserted.
+     *
+     * @param coinValue The value of the inserted coin
+     */
+    void onCoinInserted(int coinValue);
+
+    /**
+     * Called when payment is processed.
+     *
+     * @param amount The payment amount
+     * @param method The payment method used
+     */
+    void onPaymentProcessed(int amount, String method);
+
+    /**
+     * Called when a product is dispensed.
+     *
+     * @param productId The ID of the dispensed product
+     */
+    void onProductDispensed(String productId);
+
+    /**
+     * Called when a transaction is completed.
+     *
+     * @param transactionId The ID of the completed transaction
+     */
+    void onTransactionCompleted(String transactionId);
+
+    /**
+     * Called when a transaction fails.
+     *
+     * @param transactionId The ID of the failed transaction
+     * @param reason The reason for failure
+     */
+    void onTransactionFailed(String transactionId, String reason);
+
+    /**
+     * Called when the vending machine needs maintenance (low inventory, etc.).
+     *
+     * @param message The maintenance message
+     */
+    void onMaintenanceRequired(String message);
+}

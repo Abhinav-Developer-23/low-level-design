@@ -1,13 +1,12 @@
 package org.example.states;
 
+import org.example.enums.TransactionStatus;
 import org.example.interfaces.State;
-import org.example.model.Product;
 import org.example.system.VendingMachineContext;
 
 /**
- * Payment State: Payment received, ready to dispense
- * Valid operations: dispenseProduct
- * Invalid operations: selectProduct, insertCoin, insertCard, cancel
+ * Concrete state class representing the payment processing state.
+ * In this state, the payment is being validated and processed.
  */
 public class PaymentState implements State {
     private final VendingMachineContext context;
@@ -17,38 +16,59 @@ public class PaymentState implements State {
     }
 
     @Override
-    public void selectProduct(Product product) {
-        System.out.println("❌ Transaction in progress. Please wait.");
+    public void selectProduct(String productId) {
+        System.out.println("Payment in progress. Cannot change product selection.");
     }
 
     @Override
-    public void insertCoin(double amount) {
-        System.out.println("❌ Payment already received");
+    public void insertCoin(int coinValue) {
+        System.out.println("Payment already in progress. Please wait.");
     }
 
     @Override
-    public void insertCard(String cardNumber, double amount) {
-        System.out.println("❌ Payment already received");
-    }
+    public void processPayment() {
+        try {
+            // Validate payment
+            if (!context.getCurrentTransaction().isPaymentComplete()) {
+                context.getCurrentTransaction().setStatus(TransactionStatus.FAILED);
+                System.out.println("Payment incomplete. Transaction failed.");
+                cancelTransaction();
+                return;
+            }
 
-    @Override
-    public void insertMobilePayment(String paymentId, double amount) {
-        System.out.println("❌ Payment already received");
+            // Process the payment through the payment strategy
+            boolean paymentSuccess = context.getPaymentStrategy().processPayment(
+                context.getCurrentTransaction()
+            );
+
+            if (paymentSuccess) {
+                context.getCurrentTransaction().setStatus(TransactionStatus.COMPLETED);
+                context.setCurrentState(new DispensingState(context));
+                System.out.println("Payment processed successfully. Dispensing product...");
+                dispenseProduct();
+            } else {
+                context.getCurrentTransaction().setStatus(TransactionStatus.FAILED);
+                System.out.println("Payment processing failed.");
+                cancelTransaction();
+            }
+        } catch (Exception e) {
+            context.getCurrentTransaction().setStatus(TransactionStatus.FAILED);
+            System.err.println("Error processing payment: " + e.getMessage());
+            cancelTransaction();
+        }
     }
 
     @Override
     public void dispenseProduct() {
-        // Valid operation - transition to Dispensing state
-        System.out.println("✓ Payment verified. Preparing to dispense...");
-        context.setState(new DispensingState(context));
-        
-        // Delegate to dispensing state
-        context.dispenseProduct();
+        // In payment state, dispensing is handled by processPayment when successful
+        System.out.println("Processing payment first...");
     }
 
     @Override
-    public void cancel() {
-        System.out.println("❌ Cannot cancel - payment already processed. Dispensing in progress.");
+    public void cancelTransaction() {
+        System.out.println("Cancelling transaction and returning payment...");
+        context.cancelCurrentTransaction();
+        context.setCurrentState(new IdleState(context));
     }
 
     @Override
@@ -56,4 +76,3 @@ public class PaymentState implements State {
         return "PAYMENT";
     }
 }
-

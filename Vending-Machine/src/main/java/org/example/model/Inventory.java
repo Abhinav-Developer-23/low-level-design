@@ -1,73 +1,28 @@
 package org.example.model;
 
-import org.example.enums.ProductType;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-/**
- * Model class representing the inventory of products in the vending machine.
- */
 public class Inventory {
-    private final Map<String, Product> products;
+    private final Map<String, Integer> stock = new HashMap<>();
 
-    public Inventory() {
-        this.products = new HashMap<>();
-        initializeInventory();
+    public void add(String itemCode, int count) {
+        stock.put(itemCode, stock.getOrDefault(itemCode, 0) + count);
     }
 
-    private void initializeInventory() {
-        // Initialize with some default products
-        addProduct("A1", ProductType.CHIPS, 10);
-        addProduct("A2", ProductType.CHOCOLATE, 8);
-        addProduct("B1", ProductType.SODA, 12);
-        addProduct("B2", ProductType.CANDY, 15);
-        addProduct("C1", ProductType.GUM, 20);
-        addProduct("C2", ProductType.WATER, 6);
+    public boolean hasItem(String code) {
+        return stock.getOrDefault(code, 0) > 0;
     }
 
-    public void addProduct(String slotId, ProductType type, int quantity) {
-        Product product = new Product(slotId, type, quantity);
-        products.put(slotId, product);
+    public void removeOne(String code) {
+        stock.computeIfPresent(code, (k, v) -> (v > 0) ? v - 1 : 0);
     }
 
-    public Product getProduct(String slotId) {
-        return products.get(slotId);
+    public int getCount(String code) {
+        return stock.getOrDefault(code, 0);
     }
 
-    public Map<String, Product> getAllProducts() {
-        return new HashMap<>(products);
-    }
-
-    public boolean isProductAvailable(String slotId) {
-        Product product = products.get(slotId);
-        return product != null && product.isAvailable();
-    }
-
-    public Product dispenseProduct(String slotId) {
-        Product product = products.get(slotId);
-        if (product != null && product.isAvailable()) {
-            product.decrementQuantity();
-            return new Product(product.getId(), product.getType(), 1);
-        }
-        return null;
-    }
-
-    public void restockProduct(String slotId, int quantity) {
-        Product product = products.get(slotId);
-        if (product != null) {
-            product.setQuantity(product.getQuantity() + quantity);
-        }
-    }
-
-    public int getTotalValue() {
-        return products.values().stream()
-                     .mapToInt(product -> product.getPrice() * product.getQuantity())
-                     .sum();
-    }
-
-    public int getTotalItems() {
-        return products.values().stream()
-                     .mapToInt(Product::getQuantity)
-                     .sum();
+    public Set<String> getItems() {
+        return Collections.unmodifiableSet(stock.keySet());
     }
 }
+

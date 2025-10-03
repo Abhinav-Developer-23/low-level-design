@@ -12,6 +12,8 @@ target/
 *.iml
 *.ipr
 
+*.log
+
 ### Eclipse ###
 .apt_generated
 .classpath
@@ -40,4 +42,4 @@ build/
 
 .idea
 **/.idea/
-
+*.log

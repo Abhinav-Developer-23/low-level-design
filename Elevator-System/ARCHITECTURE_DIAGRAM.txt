@@ -1,0 +1,317 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    ELEVATOR CONTROL SYSTEM ARCHITECTURE                     ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                              USER LAYER                                   │
+└──────────────────────────────────────────────────────────────────────────┘
+         │                                           │
+         │ External Request                          │ Internal Request
+         │ (Floor Button)                            │ (Elevator Car Button)
+         ▼                                           ▼
+┌─────────────────────┐                     ┌──────────────────────┐
+│  submitExternal     │                     │  submitInternal      │
+│  Request(floor,     │                     │  Request(elevatorId, │
+│  direction)         │                     │  destination)        │
+└──────────┬──────────┘                     └──────────┬───────────┘
+           │                                           │
+           └─────────────────┬─────────────────────────┘
+                             ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                       ELEVATOR CONTROLLER (Singleton)                     │
+│ ┌──────────────────────────────────────────────────────────────────────┐ │
+│ │  - List<Elevator> elevators                                          │ │
+│ │  - Queue<ExternalRequest> pendingExternalRequests                    │ │
+│ │  - Map<String, InternalRequest> pendingInternalRequests              │ │
+│ │  - SchedulingStrategy schedulingStrategy                             │ │
+│ │  - ScheduledExecutorService executorService                          │ │
+│ │  - ReentrantLock lock                                                │ │
+│ └──────────────────────────────────────────────────────────────────────┘ │
+│                                                                            │
+│  Main Operations:                                                          │
+│  • processPendingRequests() [Every 500ms]                                 │
+│  • assignRequestsToElevators()                                            │
+│  • handleOutOfService()                                                   │
+└────────────────────────┬───────────────────────────────────────────────────┘
+                         │
+                         │ Uses Strategy Pattern
+                         ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      SCHEDULING STRATEGY (Interface)                      │
+│                   selectElevator(request, elevators)                      │
+└────────────────────────┬───────────────────────────────────────────────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         ▼               ▼               ▼
+┌──────────────┐  ┌────────────┐  ┌──────────────┐
+│  NearestCar  │  │ RoundRobin │  │  ZoneBased   │
+│   Strategy   │  │  Strategy  │  │   Strategy   │
+├──────────────┤  ├────────────┤  ├──────────────┤
+│ • Distance-  │  │ • Even     │  │ • Zone-      │
+│   based      │  │   load     │  │   aware      │
+│ • Direction- │  │   distribu-│  │ • Assigns    │
+│   aware      │  │   tion     │  │   floors to  │
+│ • Minimizes  │  │ • Fair     │  │   specific   │
+│   wait time  │  │   rotation │  │   elevators  │
+└──────────────┘  └────────────┘  └──────────────┘
+         │               │               │
+         └───────────────┼───────────────┘
+                         │ Returns selected elevator
+                         ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                            ELEVATOR OBJECTS                               │
+│                          (One per elevator)                               │
+└──────────────────────────────────────────────────────────────────────────┘
+         ┌───────────────┼───────────────┐
+         ▼               ▼               ▼
+┌──────────────┐  ┌────────────┐  ┌──────────────┐
+│ Elevator E1  │  │Elevator E2 │  │ Elevator E3  │
+├──────────────┤  ├────────────┤  ├──────────────┤
+│ Floor: 5     │  │ Floor: 2   │  │ Floor: 0     │
+│ Direction:UP │  │Direction:DN│  │Direction:IDLE│
+│ State:MOVING │  │State:MOVING│  │State:IDLE    │
+│ Doors:CLOSED │  │Doors:CLOSED│  │Doors:CLOSED  │
+├──────────────┤  ├────────────┤  ├──────────────┤
+│ upRequests:  │  │upRequests: │  │upRequests:   │
+│  [7, 9]      │  │  []        │  │  []          │
+│ downRequests:│  │downRequests│  │downRequests: │
+│  []          │  │  [1]       │  │  []          │
+├──────────────┤  ├────────────┤  ├──────────────┤
+│ step()       │  │ step()     │  │ step()       │
+│ [Every 1s]   │  │ [Every 1s] │  │ [Every 1s]   │
+└──────────────┘  └────────────┘  └──────────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+                           STATE DIAGRAM
+═══════════════════════════════════════════════════════════════════════════
+
+                           ┌──────────┐
+                           │   IDLE   │
+                           └─────┬────┘
+                                 │ Request arrives
+                                 ▼
+                           ┌──────────┐
+                      ┌────│  MOVING  │────┐
+                      │    └──────────┘    │
+                      │                    │
+         Reaches      │                    │ Reaches
+         target floor │                    │ boundary
+                      ▼                    │
+                 ┌─────────┐               │
+                 │ STOPPED │               │
+                 └────┬────┘               │
+                      │                    │
+                      │ Open doors         │
+                      ▼                    │
+                 ┌──────────┐              │
+                 │DOOR_OPEN │              │
+                 └────┬─────┘              │
+                      │                    │
+                      │ Close doors        │
+                      │ & continue         │
+                      └────────────────────┘
+
+                   ┌───────────────┐
+                   │OUT_OF_SERVICE │ (Fault Condition)
+                   └───────────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+                      REQUEST FLOW DIAGRAM
+═══════════════════════════════════════════════════════════════════════════
+
+  [User at Floor 5]
+         │
+         │ Presses UP button
+         ▼
+  ┌─────────────────┐
+  │External Request │ ──────┐
+  │ floor: 5        │       │
+  │ direction: UP   │       │
+  │ status: PENDING │       │ Added to queue
+  └─────────────────┘       │
+                            ▼
+                  ┌─────────────────────┐
+                  │ Controller Queue    │
+                  │ (processed every    │
+                  │  500ms)             │
+                  └──────────┬──────────┘
+                             │
+                             │ Strategy selects E1
+                             ▼
+                  ┌─────────────────────┐
+                  │ Elevator E1         │
+                  │ Adds 5 to           │
+                  │ upRequests          │
+                  └──────────┬──────────┘
+                             │
+                             │ Every 1 second
+                             ▼
+                  ┌─────────────────────┐
+                  │ E1 moves step()     │
+                  │ 0→1→2→3→4→5         │
+                  └──────────┬──────────┘
+                             │
+                             │ At floor 5
+                             ▼
+                  ┌─────────────────────┐
+                  │ E1 opens doors      │
+                  │ User enters         │
+                  └──────────┬──────────┘
+                             │
+                             │ User presses 8
+                             ▼
+                  ┌─────────────────────┐
+                  │ Internal Request    │
+                  │ destination: 8      │
+                  │ Added to upRequests │
+                  └──────────┬──────────┘
+                             │
+                             │ Doors close, continue
+                             ▼
+                  ┌─────────────────────┐
+                  │ E1 moves            │
+                  │ 5→6→7→8             │
+                  └──────────┬──────────┘
+                             │
+                             │ At floor 8
+                             ▼
+                  ┌─────────────────────┐
+                  │ E1 opens doors      │
+                  │ User exits          │
+                  │ Request COMPLETED   │
+                  └─────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+                        CLASS HIERARCHY
+═══════════════════════════════════════════════════════════════════════════
+
+                      ┌──────────┐
+                      │ Request  │ (Abstract)
+                      └─────┬────┘
+                            │
+              ┌─────────────┴─────────────┐
+              ▼                           ▼
+      ┌───────────────┐          ┌────────────────┐
+      │External       │          │Internal        │
+      │Request        │          │Request         │
+      ├───────────────┤          ├────────────────┤
+      │- floor        │          │- destination   │
+      │- direction    │          │- elevatorId    │
+      └───────────────┘          └────────────────┘
+
+                ┌─────────────────────┐
+                │Scheduling           │ (Interface)
+                │Strategy             │
+                └──────────┬──────────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         ▼                 ▼                 ▼
+  ┌────────────┐    ┌────────────┐   ┌───────────┐
+  │NearestCar  │    │RoundRobin  │   │ZoneBased  │
+  │Strategy    │    │Strategy    │   │Strategy   │
+  └────────────┘    └────────────┘   └───────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+                    THREAD SAFETY MECHANISMS
+═══════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    Thread Safety Layers                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Layer 1: Volatile Fields                                      │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │ • currentFloor (volatile)                              │    │
+│  │ • currentDirection (volatile)                          │    │
+│  │ • state (volatile)                                     │    │
+│  │ • doorsOpen (volatile)                                 │    │
+│  └────────────────────────────────────────────────────────┘    │
+│           ▲                                                     │
+│           │ Ensures visibility across threads                  │
+│           │                                                     │
+│  Layer 2: Concurrent Collections                               │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │ • ConcurrentLinkedQueue (external requests)            │    │
+│  │ • ConcurrentHashMap (internal requests)                │    │
+│  │ • ConcurrentHashMap.newKeySet() (floor requests)       │    │
+│  └────────────────────────────────────────────────────────┘    │
+│           ▲                                                     │
+│           │ Lock-free thread-safe operations                   │
+│           │                                                     │
+│  Layer 3: ReentrantLock                                        │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │ • Protects critical sections                           │    │
+│  │ • Used in Elevator.step()                              │    │
+│  │ • Used in Controller operations                        │    │
+│  └────────────────────────────────────────────────────────┘    │
+│           ▲                                                     │
+│           │ Explicit locking for complex operations            │
+│           │                                                     │
+│  Layer 4: ScheduledExecutorService                            │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │ • Manages concurrent threads                           │    │
+│  │ • One thread per elevator                              │    │
+│  │ • One thread for request processing                    │    │
+│  └────────────────────────────────────────────────────────┘    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+                        TIMING DIAGRAM
+═══════════════════════════════════════════════════════════════════════════
+
+Time    Controller         Elevator E1          Elevator E2
+(ms)    (Request Proc)     (Movement)          (Movement)
+─────   ──────────────     ────────────        ────────────
+0       Start
+500     Process queue
+1000                       Step (move)
+1500    Process queue
+2000                       Step (move)         Step (move)
+2500    Process queue
+3000                       Step (door open)
+3500    Process queue
+4000                       Step (door close)   Step (move)
+4500    Process queue
+5000                       Step (move)         Step (move)
+
+Note: 
+- Request processing: Every 500ms
+- Elevator movement: Every 1000ms
+- Asynchronous parallel operation
+
+═══════════════════════════════════════════════════════════════════════════
+                    DESIGN PATTERNS MAPPING
+═══════════════════════════════════════════════════════════════════════════
+
+Pattern          Component                    Purpose
+───────────      ─────────────────           ──────────────────────────
+Strategy    ──→  SchedulingStrategy          Pluggable algorithms
+Singleton   ──→  ElevatorController          Single point of control
+State       ──→  ElevatorState enum          State-dependent behavior
+Factory     ──→  Request constructors        Object creation
+Observer    ──→  Request notifications       Event handling
+
+═══════════════════════════════════════════════════════════════════════════
+                          LEGEND
+═══════════════════════════════════════════════════════════════════════════
+
+Symbols:
+│  ─  ┐  └  ┌  ┘  ├  ┤  ┬  ┴  ┼     Box drawing
+═  ║  ╔  ╗  ╚  ╝  ╠  ╣  ╦  ╩  ╬     Double line box drawing
+▼  ▲  ►  ◄                          Arrows
+•  ○  ●                              Bullets
+─────────────────────────────────────────────────────────────────────────
+
+Components:
+[User Input]       → External actor
+┌─────────┐        → Component/class
+│Component│        → With details
+└─────────┘
+
+Relationships:
+──→                → One-way flow
+←──→               → Two-way communication
+│                  → Hierarchy/containment
+═══════════════════════════════════════════════════════════════════════════
+

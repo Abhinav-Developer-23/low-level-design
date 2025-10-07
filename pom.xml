@@ -19,6 +19,7 @@
         <module>Book-Store</module>
         <module>Library-management-System</module>
         <module>Movie-Ticket-Booking</module>
+        <module>Elevator-System</module>
     </modules>
 
     <properties>

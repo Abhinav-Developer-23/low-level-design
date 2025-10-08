@@ -154,12 +154,18 @@ import java.util.stream.Collectors;
  * ========================================
  * 
  * The design supports easy extension:
- * - New account types (FixedDepositAccount, etc.)
- * - New authentication methods (biometric, OTP)
- * - New transaction types (bill payment, etc.)
- * - New notification channels (push, app notifications)
- * - New cash dispensing algorithms
- * - New validation rules
+ * - New account types using Factory Pattern (e.g., FixedDepositAccount demonstrated)
+ * - New authentication methods (biometric, OTP) via AuthenticationStrategy
+ * - New transaction types (bill payment, etc.) by extending State
+ * - New notification channels (push, app notifications) via NotificationObserver
+ * - New cash dispensing algorithms via CashDispenseStrategy
+ * - New validation rules by extending AbstractTransactionValidator
+ * 
+ * Factory Pattern Benefits:
+ * - Centralized account creation logic
+ * - Easy to add new account types without modifying client code
+ * - Consistent initialization of account parameters
+ * - Supports both type-based and convenience factory methods
  * 
  * @author Low-Level Design Implementation
  * @version 1.0
@@ -258,8 +264,7 @@ public class Main {
         System.out.println("\n=== Demo 7: PIN Lockout Test ===");
         Card card2 = new Card("0987654321", "ACC002", CardType.DEBIT, LocalDateTime.now().plusYears(2));
         
-        // Create a fresh ATM instance for this test to avoid state issues
-        ATMMachine atm2 = new ATMMachine("ATM002", "Central Plaza", bank);
+        // Refill ATM2 for testing
         admin.refillCash(atm2, Denomination.HUNDRED, 50);
         
         atmSystem.insertCard(atm2, card2);
@@ -286,6 +291,17 @@ public class Main {
         atmSystem.insertCard(atm1, card1);
         atmSystem.enterPIN(atm1, "1234");
         atmSystem.transferFunds(atm1, "ACC003", 500.0);
+        atmSystem.ejectCard(atm1);
+        
+        // Demo 11: Fixed Deposit Account (created using Factory Pattern)
+        System.out.println("\n=== Demo 11: Fixed Deposit Account Test ===");
+        Card card4 = new Card("2222222222", "ACC004", CardType.DEBIT, LocalDateTime.now().plusYears(2));
+        atmSystem.insertCard(atm1, card4);
+        atmSystem.enterPIN(atm1, "4444");
+        System.out.println("Testing Fixed Deposit Account with lower daily limit ($2000) and higher min balance ($1000)");
+        atmSystem.checkBalance(atm1);
+        atmSystem.withdrawCash(atm1, 500.0); // Should succeed
+        atmSystem.withdrawCash(atm1, 4500.0); // Should fail - exceeds minimum balance
         atmSystem.ejectCard(atm1);
         
         System.out.println("\n=== ATM System Demo Complete ===");

@@ -22,6 +22,7 @@
         <module>Elevator-System</module>
         <module>Tic-Tac-Toe</module>
         <module>ATM-Machine</module>
+        <module>Rate-Limiter</module>
     </modules>
 
     <properties>

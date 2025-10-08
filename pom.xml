@@ -25,6 +25,7 @@
         <module>Rate-Limiter</module>
         <module>Notification-System</module>
         <module>Split-Wise</module>
+        <module>Snake-Ladder</module>
     </modules>
 
     <properties>

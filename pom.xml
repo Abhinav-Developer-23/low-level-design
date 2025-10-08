@@ -24,6 +24,7 @@
         <module>ATM-Machine</module>
         <module>Rate-Limiter</module>
         <module>Notification-System</module>
+        <module>Split-Wise</module>
     </modules>
 
     <properties>

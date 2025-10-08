@@ -20,6 +20,7 @@
         <module>Library-management-System</module>
         <module>Movie-Ticket-Booking</module>
         <module>Elevator-System</module>
+        <module>Tic-Tac-Toe</module>
     </modules>
 
     <properties>

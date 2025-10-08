@@ -21,6 +21,7 @@
         <module>Movie-Ticket-Booking</module>
         <module>Elevator-System</module>
         <module>Tic-Tac-Toe</module>
+        <module>ATM-Machine</module>
     </modules>
 
     <properties>

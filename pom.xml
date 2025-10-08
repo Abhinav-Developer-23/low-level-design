@@ -23,6 +23,7 @@
         <module>Tic-Tac-Toe</module>
         <module>ATM-Machine</module>
         <module>Rate-Limiter</module>
+        <module>Notification-System</module>
     </modules>
 
     <properties>

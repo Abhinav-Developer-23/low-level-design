@@ -26,6 +26,8 @@
         <module>Notification-System</module>
         <module>Split-Wise</module>
         <module>Snake-Ladder</module>
+        <module>quick-commerce-app</module>
+        <module>Razorpay</module>
     </modules>
 
     <properties>

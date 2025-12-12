@@ -16,3 +16,5 @@ public interface SortStrategy {
     void sort(List<SearchResult> results);
 }
 
+
+

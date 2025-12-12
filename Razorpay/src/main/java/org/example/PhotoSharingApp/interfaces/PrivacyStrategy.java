@@ -18,3 +18,5 @@ public interface PrivacyStrategy {
     boolean canView(User viewer, Photo photo);
 }
 
+
+

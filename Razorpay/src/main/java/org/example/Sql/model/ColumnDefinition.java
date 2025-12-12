@@ -20,6 +20,14 @@ public class ColumnDefinition {
     private final ColumnType type;
     private final List<Constraint> constraints;
     
+    // Public no-arg constructor for creating builder instances
+    public ColumnDefinition() {
+        this.name = null;
+        this.type = null;
+        this.constraints = null;
+    }
+    
+    // Private constructor - only accessible from inner Builder class
     private ColumnDefinition(String name, ColumnType type, List<Constraint> constraints) {
         this.name = name;
         this.type = type;
@@ -27,23 +35,12 @@ public class ColumnDefinition {
     }
     
     /**
-     * Factory method to create an integer column builder.
+     * Creates a new builder instance.
      * 
-     * @param name column name
-     * @return builder for integer column
+     * @return a new Builder instance
      */
-    public static ColumnBuilder intColumn(String name) {
-        return new ColumnBuilder(name, ColumnType.INT);
-    }
-    
-    /**
-     * Factory method to create a string column builder.
-     * 
-     * @param name column name
-     * @return builder for string column
-     */
-    public static ColumnBuilder stringColumn(String name) {
-        return new ColumnBuilder(name, ColumnType.STRING);
+    public Builder newBuilder() {
+        return new Builder();
     }
     
     /**
@@ -90,17 +87,34 @@ public class ColumnDefinition {
     }
     
     /**
-     * Builder class for ColumnDefinition.
+     * Inner Builder class for ColumnDefinition.
      * Builder Pattern: Allows step-by-step construction of column definitions.
      */
-    public static class ColumnBuilder {
-        private final String name;
-        private final ColumnType type;
+    public class Builder {
+        private String name;
+        private ColumnType type;
         private final List<Constraint> constraints = new ArrayList<>();
         
-        private ColumnBuilder(String name, ColumnType type) {
+        /**
+         * Sets the column name.
+         * 
+         * @param name the column name
+         * @return this builder for chaining
+         */
+        public Builder name(String name) {
             this.name = name;
+            return this;
+        }
+        
+        /**
+         * Sets the column type.
+         * 
+         * @param type the column type
+         * @return this builder for chaining
+         */
+        public Builder type(ColumnType type) {
             this.type = type;
+            return this;
         }
         
         /**
@@ -108,7 +122,7 @@ public class ColumnDefinition {
          * 
          * @return this builder for chaining
          */
-        public ColumnBuilder required() {
+        public Builder required() {
             constraints.add(new RequiredConstraint());
             return this;
         }
@@ -118,7 +132,7 @@ public class ColumnDefinition {
          * 
          * @return this builder for chaining
          */
-        public ColumnBuilder optional() {
+        public Builder optional() {
             // Do nothing - columns are optional by default
             return this;
         }
@@ -129,7 +143,7 @@ public class ColumnDefinition {
          * @param minValue minimum allowed value
          * @return this builder for chaining
          */
-        public ColumnBuilder withMinValue(int minValue) {
+        public Builder withMinValue(int minValue) {
             if (type != ColumnType.INT) {
                 throw new IllegalArgumentException("MinValue constraint can only be applied to INT columns");
             }
@@ -143,7 +157,7 @@ public class ColumnDefinition {
          * @param maxLength maximum allowed string length
          * @return this builder for chaining
          */
-        public ColumnBuilder withMaxLength(int maxLength) {
+        public Builder withMaxLength(int maxLength) {
             if (type != ColumnType.STRING) {
                 throw new IllegalArgumentException("MaxLength constraint can only be applied to STRING columns");
             }
@@ -157,7 +171,7 @@ public class ColumnDefinition {
          * @param constraint the constraint to add
          * @return this builder for chaining
          */
-        public ColumnBuilder withConstraint(Constraint constraint) {
+        public Builder withConstraint(Constraint constraint) {
             constraints.add(constraint);
             return this;
         }
@@ -168,6 +182,12 @@ public class ColumnDefinition {
          * @return the constructed ColumnDefinition
          */
         public ColumnDefinition build() {
+            if (name == null || name.isEmpty()) {
+                throw new IllegalStateException("Column name must be specified before building");
+            }
+            if (type == null) {
+                throw new IllegalStateException("Column type must be specified before building");
+            }
             return new ColumnDefinition(name, type, constraints);
         }
     }

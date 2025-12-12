@@ -2,6 +2,7 @@ package org.example.Sql;
 
 import org.example.Sql.interfaces.Database;
 import org.example.Sql.database.InMemoryDatabase;
+import org.example.Sql.enums.ColumnType;
 import org.example.Sql.exception.ConstraintViolationException;
 import org.example.Sql.model.ColumnDefinition;
 import org.example.Sql.model.TableRow;
@@ -19,15 +20,21 @@ public class Main {
 
         // Define schema using the builder + strategy based constraints
         TableSchema userSchema = TableSchema.builder("users")
-            .addColumn(ColumnDefinition.intColumn("id")
+            .addColumn(new ColumnDefinition().newBuilder()
+                .name("id")
+                .type(ColumnType.INT)
                 .required()
                 .withMinValue(1024)
                 .build())
-            .addColumn(ColumnDefinition.stringColumn("name")
+            .addColumn(new ColumnDefinition().newBuilder()
+                .name("name")
+                .type(ColumnType.STRING)
                 .required()
                 .withMaxLength(20)
                 .build())
-            .addColumn(ColumnDefinition.stringColumn("email")
+            .addColumn(new ColumnDefinition().newBuilder()
+                .name("email")
+                .type(ColumnType.STRING)
                 .optional()
                 .withMaxLength(20)
                 .build())
@@ -71,19 +78,27 @@ public class Main {
 
         // Update schema - add a new optional column
         TableSchema updatedSchema = TableSchema.builder("users")
-            .addColumn(ColumnDefinition.intColumn("id")
+            .addColumn(new ColumnDefinition().newBuilder()
+                .name("id")
+                .type(ColumnType.INT)
                 .required()
                 .withMinValue(1024)
                 .build())
-            .addColumn(ColumnDefinition.stringColumn("name")
+            .addColumn(new ColumnDefinition().newBuilder()
+                .name("name")
+                .type(ColumnType.STRING)
                 .required()
                 .withMaxLength(20)
                 .build())
-            .addColumn(ColumnDefinition.stringColumn("email")
+            .addColumn(new ColumnDefinition().newBuilder()
+                .name("email")
+                .type(ColumnType.STRING)
                 .optional()
                 .withMaxLength(20)
                 .build())
-            .addColumn(ColumnDefinition.stringColumn("status")
+            .addColumn(new ColumnDefinition().newBuilder()
+                .name("status")
+                .type(ColumnType.STRING)
                 .optional()
                 .withMaxLength(20)
                 .build())

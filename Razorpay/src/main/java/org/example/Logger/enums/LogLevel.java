@@ -8,3 +8,4 @@ public enum LogLevel {
     DELETE  // Custom log level as per requirement
 }
 
+

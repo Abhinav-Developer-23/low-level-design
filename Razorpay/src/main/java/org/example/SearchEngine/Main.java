@@ -12,10 +12,11 @@ import java.util.List;
 
 /**
  * Main class demonstrating the Search Engine functionality
+ * Simplified to use basic string matching without regex or relevance scoring
  */
 public class Main {
     public static void main(String[] args) {
-        System.out.println("=== Tech Blog Search Engine Demo ===\n");
+        System.out.println("=== Tech Blog Search Engine Demo (Simplified) ===\n");
 
         // Initialize the search engine
         SearchEngine searchEngine = new SearchEngine();
@@ -52,15 +53,15 @@ public class Main {
         System.out.println("   Added: " + doc5.getContent());
         System.out.println();
 
-        // Demo 3: Search with default sorting (Relevance Descending)
-        System.out.println("3. Searching for 'microservices' (default sorting - relevance)...");
+        // Demo 3: Simple string search (default sorting - alphabetical)
+        System.out.println("3. Searching for 'microservices' (default sorting - alphabetical)...");
         List<SearchResult> results1 = searchEngine.search("tech-blog", "microservices");
         printSearchResults(results1);
         System.out.println();
 
-        // Demo 4: Search with different sorting - Alphabetical
-        System.out.println("4. Searching for 'scale' (alphabetical ascending)...");
-        List<SearchResult> results2 = searchEngine.search("tech-blog", "scale", SortOrder.ALPHABETICAL_ASC);
+        // Demo 4: Search with different sorting - Alphabetical descending
+        System.out.println("4. Searching for 'scale' (alphabetical descending)...");
+        List<SearchResult> results2 = searchEngine.search("tech-blog", "scale", SortOrder.ALPHABETICAL_DESC);
         printSearchResults(results2);
         System.out.println();
 
@@ -88,7 +89,7 @@ public class Main {
 
         // Demo 8: Search with timestamp sorting
         System.out.println("8. Searching for 'API' with timestamp sorting (newest first)...");
-        List<SearchResult> results5 = searchEngine.search("tech-blog", ".*", SortOrder.TIMESTAMP_DESC);
+        List<SearchResult> results5 = searchEngine.search("tech-blog", "API", SortOrder.TIMESTAMP_DESC);
         printSearchResults(results5);
         System.out.println();
 
@@ -126,9 +127,9 @@ public class Main {
         }
         System.out.println();
 
-        // Demo 11: Complex search patterns with regex
-        System.out.println("11. Advanced search with regex pattern 'Micro.*Architecture'...");
-        List<SearchResult> results6 = searchEngine.search("tech-blog", "Micro.*Architecture");
+        // Demo 11: Search for partial words
+        System.out.println("11. Searching for 'service' (will match 'services' and 'microservices')...");
+        List<SearchResult> results6 = searchEngine.search("tech-blog", "service");
         printSearchResults(results6);
         System.out.println();
 
@@ -161,9 +162,7 @@ public class Main {
         System.out.println("   Found " + results.size() + " result(s):");
         for (int i = 0; i < results.size(); i++) {
             SearchResult result = results.get(i);
-            System.out.println("   [" + (i + 1) + "] Score: " + 
-                             String.format("%.2f", result.getRelevanceScore()) + 
-                             " | Matches: " + result.getMatchCount());
+            System.out.println("   [" + (i + 1) + "] Matches: " + result.getMatchCount());
             System.out.println("       " + result.getDocument().getContent());
         }
     }

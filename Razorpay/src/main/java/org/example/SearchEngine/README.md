@@ -1,7 +1,12 @@
-# Tech Blog Search Engine - Low Level Design
+# Tech Blog Search Engine - Low Level Design (Simplified)
 
 ## Overview
-An in-memory search engine designed for tech blog content with comprehensive search and sorting capabilities. Built with proper design patterns and SOLID principles.
+An in-memory search engine designed for tech blog content with simple string-based search and sorting capabilities. Built with proper design patterns and SOLID principles.
+
+**Simplified Features**: 
+- Simple case-insensitive string matching (no regex patterns)
+- Basic match counting (no complex relevance scoring)
+- Alphabetical and timestamp-based sorting
 
 ## Architecture
 
@@ -11,7 +16,7 @@ org.example.SearchEngine/
 ├── model/                      # Domain entities
 │   ├── Document.java          # Document entity
 │   ├── Dataset.java           # Dataset entity (collection of documents)
-│   └── SearchResult.java      # Search result with relevance score
+│   └── SearchResult.java      # Search result with match count
 ├── enums/                      # Enumerations
 │   └── SortOrder.java         # Sorting options
 ├── exception/                  # Custom exceptions
@@ -30,8 +35,6 @@ org.example.SearchEngine/
 │   └── SearchServiceImpl.java         # Search operations implementation
 ├── strategy/                   # Sorting strategies
 │   ├── SortStrategy.java              # Strategy interface
-│   ├── RelevanceDescSortStrategy.java
-│   ├── RelevanceAscSortStrategy.java
 │   ├── AlphabeticalAscSortStrategy.java
 │   ├── AlphabeticalDescSortStrategy.java
 │   ├── TimestampDescSortStrategy.java
@@ -62,7 +65,6 @@ org.example.SearchEngine/
 **Implementation**:
 - `SortStrategy` interface with `sort()` method
 - Multiple concrete strategies:
-  - `RelevanceDescSortStrategy` / `RelevanceAscSortStrategy`
   - `AlphabeticalAscSortStrategy` / `AlphabeticalDescSortStrategy`
   - `TimestampDescSortStrategy` / `TimestampAscSortStrategy`
 
@@ -144,13 +146,9 @@ org.example.SearchEngine/
 - Auto-generated unique IDs
 
 ### 3. Search Functionality
-- **Pattern matching**: Case-insensitive regex-based search
-- **Relevance scoring**: Intelligent scoring based on:
-  - Match count (higher is better)
-  - Document length (shorter documents with same matches rank higher)
-  - Pattern specificity (longer patterns are more valuable)
+- **Pattern matching**: Simple case-insensitive string matching (contains check)
+- **Match counting**: Count occurrences of search string in documents
 - **Multiple sorting options**:
-  - Relevance (ascending/descending)
   - Alphabetical (ascending/descending)
   - Timestamp (newest/oldest first)
 
@@ -175,12 +173,12 @@ Document doc1 = searchEngine.addDocument("tech-blog",
 Document doc2 = searchEngine.addDocument("tech-blog",
     "Database Optimization Techniques");
 
-// Search with default sorting (relevance)
+// Search with default sorting (alphabetical ascending)
 List<SearchResult> results = searchEngine.search("tech-blog", "microservices");
 
 // Search with custom sorting
 List<SearchResult> sortedResults = searchEngine.search("tech-blog", 
-    "optimization", SortOrder.ALPHABETICAL_ASC);
+    "optimization", SortOrder.TIMESTAMP_DESC);
 
 // Delete a document
 searchEngine.deleteDocument("tech-blog", doc1.getId());
@@ -218,7 +216,7 @@ searchEngine.deleteDataset("tech-blog");
 1. **Repository Tests**: Test CRUD operations
 2. **Service Tests**: Test business logic with mocked repository
 3. **Strategy Tests**: Test each sort strategy
-4. **Search Tests**: Test search algorithm and relevance scoring
+4. **Search Tests**: Test search algorithm and match counting
 
 ### Integration Tests (Recommended)
 1. Test end-to-end workflows
@@ -232,6 +230,8 @@ searchEngine.deleteDataset("tech-blog");
    - Phrase search
    - Fuzzy matching
    - Synonym support
+   - Regex pattern support
+   - Advanced relevance scoring
 
 2. **Performance**
    - Inverted index for faster search

@@ -5,15 +5,12 @@ import org.example.SearchEngine.enums.SortOrder;
 /**
  * Factory for creating sort strategies
  * Following Factory Pattern
+ * Simplified to exclude relevance-based sorting
  */
 public class SortStrategyFactory {
     
     public static SortStrategy getSortStrategy(SortOrder sortOrder) {
         switch (sortOrder) {
-            case RELEVANCE_DESC:
-                return new RelevanceDescSortStrategy();
-            case RELEVANCE_ASC:
-                return new RelevanceAscSortStrategy();
             case ALPHABETICAL_ASC:
                 return new AlphabeticalAscSortStrategy();
             case ALPHABETICAL_DESC:
@@ -23,7 +20,7 @@ public class SortStrategyFactory {
             case TIMESTAMP_ASC:
                 return new TimestampAscSortStrategy();
             default:
-                return new RelevanceDescSortStrategy(); // Default strategy
+                return new AlphabeticalAscSortStrategy(); // Default strategy
         }
     }
 }

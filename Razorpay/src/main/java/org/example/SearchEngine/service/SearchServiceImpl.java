@@ -9,12 +9,11 @@ import org.example.SearchEngine.strategy.SortStrategyFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Implementation of SearchService
  * Uses Strategy Pattern for sorting
+ * Simplified to use basic string matching without regex or relevance scoring
  */
 public class SearchServiceImpl implements SearchService {
     private final DatasetRepository datasetRepository;
@@ -28,22 +27,17 @@ public class SearchServiceImpl implements SearchService {
         List<Document> documents = datasetRepository.getDocuments(datasetId);
         List<SearchResult> searchResults = new ArrayList<>();
 
-        // Compile pattern for efficient matching
-        Pattern pattern = Pattern.compile(searchPattern, Pattern.CASE_INSENSITIVE);
+        // Simple case-insensitive string matching
+        String lowerCasePattern = searchPattern.toLowerCase();
 
         for (Document document : documents) {
-            Matcher matcher = pattern.matcher(document.getContent());
-            int matchCount = 0;
-
-            // Count occurrences of the pattern
-            while (matcher.find()) {
-                matchCount++;
-            }
-
-            // Only include documents that have matches
-            if (matchCount > 0) {
-                double relevanceScore = calculateRelevanceScore(document, searchPattern, matchCount);
-                searchResults.add(new SearchResult(document, relevanceScore, matchCount));
+            String lowerCaseContent = document.getContent().toLowerCase();
+            
+            // Check if the document contains the search string
+            if (lowerCaseContent.contains(lowerCasePattern)) {
+                // Count occurrences of the search string
+                int matchCount = countOccurrences(lowerCaseContent, lowerCasePattern);
+                searchResults.add(new SearchResult(document, matchCount));
             }
         }
 
@@ -56,27 +50,22 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public List<SearchResult> search(String datasetId, String searchPattern) {
-        return search(datasetId, searchPattern, SortOrder.RELEVANCE_DESC);
+        return search(datasetId, searchPattern, SortOrder.ALPHABETICAL_ASC);
     }
 
     /**
-     * Calculate relevance score based on match count and document length
-     * Higher score means more relevant
+     * Count occurrences of a substring in a string
      */
-    private double calculateRelevanceScore(Document document, String searchPattern, int matchCount) {
-        String content = document.getContent();
-        int contentLength = content.length();
+    private int countOccurrences(String content, String searchString) {
+        int count = 0;
+        int index = 0;
         
-        // Base score from match count
-        double baseScore = matchCount * 100.0;
+        while ((index = content.indexOf(searchString, index)) != -1) {
+            count++;
+            index += searchString.length();
+        }
         
-        // Adjust for document length (favor shorter documents with same match count)
-        double lengthPenalty = Math.log(contentLength + 1);
-        
-        // Adjust for pattern length (longer patterns are more specific)
-        double patternBonus = searchPattern.length() * 0.5;
-        
-        return baseScore + patternBonus - lengthPenalty;
+        return count;
     }
 }
 

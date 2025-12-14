@@ -1,11 +1,14 @@
 package org.example.SearchEngine.model;
 
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 /**
  * Represents a user in the search engine system.
  * Users can own datasets and have read access to other users' datasets.
  */
+@Getter
+@EqualsAndHashCode(of = "userId")
 public class User {
     private final String userId;
     private final String name;
@@ -15,31 +18,6 @@ public class User {
         this.userId = userId;
         this.name = name;
         this.email = email;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return Objects.equals(userId, user.userId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(userId);
     }
 
     @Override

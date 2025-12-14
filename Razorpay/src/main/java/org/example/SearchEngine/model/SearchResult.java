@@ -1,10 +1,13 @@
 package org.example.SearchEngine.model;
 
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 /**
  * Represents a search result containing a document and match information.
  */
+@Getter
+@EqualsAndHashCode(of = {"document", "datasetId"})
 public class SearchResult {
     private final Document document;
     private final String datasetId;
@@ -14,32 +17,6 @@ public class SearchResult {
         this.document = document;
         this.datasetId = datasetId;
         this.matchCount = matchCount;
-    }
-
-    public Document getDocument() {
-        return document;
-    }
-
-    public String getDatasetId() {
-        return datasetId;
-    }
-
-    public int getMatchCount() {
-        return matchCount;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SearchResult that = (SearchResult) o;
-        return Objects.equals(document, that.document) &&
-                Objects.equals(datasetId, that.datasetId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(document, datasetId);
     }
 
     @Override

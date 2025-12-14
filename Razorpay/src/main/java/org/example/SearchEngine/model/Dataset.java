@@ -1,11 +1,16 @@
 package org.example.SearchEngine.model;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
 import java.util.*;
 
 /**
  * Represents a dataset containing multiple documents.
  * Supports access control through owner and authorized readers.
  */
+@Getter
+@EqualsAndHashCode(of = "datasetId")
 public class Dataset {
     private final String datasetId;
     private final String name;
@@ -20,18 +25,6 @@ public class Dataset {
         this.documents = new HashMap<>();
         this.authorizedReaders = new HashSet<>();
         this.authorizedReaders.add(ownerId); // Owner has implicit read access
-    }
-
-    public String getDatasetId() {
-        return datasetId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getOwnerId() {
-        return ownerId;
     }
 
     /**
@@ -102,19 +95,6 @@ public class Dataset {
      */
     public boolean isOwner(String userId) {
         return ownerId.equals(userId);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Dataset dataset = (Dataset) o;
-        return Objects.equals(datasetId, dataset.datasetId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(datasetId);
     }
 
     @Override

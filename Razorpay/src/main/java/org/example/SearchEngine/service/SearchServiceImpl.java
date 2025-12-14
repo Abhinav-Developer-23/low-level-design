@@ -36,7 +36,7 @@ public class SearchServiceImpl implements SearchService {
                 "User " + userId + " does not have read access to dataset " + datasetId);
         }
         
-        List<SearchResult> results = searchInDataset(dataset, pattern);
+        List<SearchResult> results =  searchInDataset(dataset, pattern);
         
         // Apply sorting
         SortStrategy sortStrategy = SortStrategyFactory.getStrategy(sortOrder);

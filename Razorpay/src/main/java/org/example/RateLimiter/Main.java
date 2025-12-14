@@ -36,7 +36,7 @@ public class Main {
         for (int i = 1; i <= 8; i++) {
             boolean allowed = tokenBucketLimiter.allowRequest(clientId);
             System.out.printf("Request %d allowed: %s%n", i, allowed);
-            Thread.sleep(300);
+            Thread.sleep(100);
         }
 
         Thread.sleep(1500); // allow some refill

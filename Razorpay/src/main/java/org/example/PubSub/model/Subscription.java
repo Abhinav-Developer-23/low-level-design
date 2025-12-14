@@ -1,85 +1,62 @@
 package org.example.PubSub.model;
 
+import lombok.Getter;
+import org.example.PubSub.enums.SubscriptionType;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Represents a subscription linking a consumer to a topic
- * Manages offset tracking for each consumer on a topic
+ * Represents a subscription in the pub-sub system.
+ * A subscription connects a consumer or consumer group to a topic.
  */
 public class Subscription {
-    private final String subscriptionId;
-    private final String consumerId;
-    private final String topicId;
-    private int offset;  // Current offset for this consumer
-    private final String consumerGroup;
-    
-    public Subscription(String consumerId, String topicId, String consumerGroup) {
-        this.subscriptionId = UUID.randomUUID().toString();
-        this.consumerId = consumerId;
-        this.topicId = topicId;
-        this.consumerGroup = consumerGroup;
-        this.offset = 0;  // Start from beginning
-    }
-    
-    public Subscription(String consumerId, String topicId) {
-        this(consumerId, topicId, null);  // No consumer group
-    }
-    
-    /**
-     * Updates the offset to the next position
-     */
-    public void commitOffset() {
-        this.offset++;
-    }
-    
-    /**
-     * Sets the offset to a specific position (for seeking)
-     */
-    public void seekToOffset(int newOffset) {
-        this.offset = Math.max(0, newOffset);
-    }
-    
-    /**
-     * Resets the offset to the beginning
-     */
-    public void resetOffset() {
-        this.offset = 0;
-    }
-    
     // Getters
-    public String getSubscriptionId() {
-        return subscriptionId;
+    @Getter
+    private final String subscriptionId;
+    @Getter
+    private final String topicId;
+    @Getter
+    private final String subscriberId; // Can be consumerId or groupId
+    @Getter
+    private final SubscriptionType subscriptionType;
+    @Getter
+    private final LocalDateTime createdAt;
+    private boolean isActive;
+
+    /**
+     * Constructor to create a new subscription.
+     *
+     * @param topicId The ID of the topic being subscribed to
+     * @param subscriberId The ID of the consumer or consumer group
+     * @param subscriptionType The type of subscription (INDIVIDUAL or GROUP)
+     */
+    public Subscription(String topicId, String subscriberId, SubscriptionType subscriptionType) {
+        this.subscriptionId = UUID.randomUUID().toString();
+        this.topicId = topicId;
+        this.subscriberId = subscriberId;
+        this.subscriptionType = subscriptionType;
+        this.createdAt = LocalDateTime.now();
+        this.isActive = true;
     }
-    
-    public String getConsumerId() {
-        return consumerId;
+
+    public boolean isActive() {
+        return isActive;
     }
-    
-    public String getTopicId() {
-        return topicId;
+
+    // Setters
+    public void setActive(boolean active) {
+        isActive = active;
     }
-    
-    public int getOffset() {
-        return offset;
-    }
-    
-    public String getConsumerGroup() {
-        return consumerGroup;
-    }
-    
-    public boolean hasConsumerGroup() {
-        return consumerGroup != null && !consumerGroup.isEmpty();
-    }
-    
+
     @Override
     public String toString() {
         return "Subscription{" +
                 "subscriptionId='" + subscriptionId + '\'' +
-                ", consumerId='" + consumerId + '\'' +
                 ", topicId='" + topicId + '\'' +
-                ", offset=" + offset +
-                ", consumerGroup='" + consumerGroup + '\'' +
+                ", subscriberId='" + subscriberId + '\'' +
+                ", subscriptionType=" + subscriptionType +
+                ", createdAt=" + createdAt +
+                ", isActive=" + isActive +
                 '}';
     }
 }
-

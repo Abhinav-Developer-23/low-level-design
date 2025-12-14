@@ -1,91 +1,112 @@
 package org.example.PubSub.model;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Represents a consumer group for load balancing
- * Multiple consumers in same group share message consumption
+ * Represents a consumer group in the pub-sub system.
+ * Consumer groups allow multiple consumers to share the workload,
+ * where each message is processed by only one consumer in the group.
  */
 public class ConsumerGroup {
+    // Getters
+    @Getter
     private final String groupId;
-    private final String topicId;
-    private final List<String> consumerIds;
-    private final AtomicInteger roundRobinCounter;
-    private int sharedOffset;
-    
-    public ConsumerGroup(String groupId, String topicId) {
-        this.groupId = groupId;
-        this.topicId = topicId;
-        this.consumerIds = new ArrayList<>();
-        this.roundRobinCounter = new AtomicInteger(0);
-        this.sharedOffset = 0;
-    }
-    
+    @Getter
+    private final String groupName;
+    @Getter
+    private final LocalDateTime createdAt;
+    private final Map<String, Consumer> consumers; // Map of consumerId -> Consumer
+    private int currentConsumerIndex; // For round-robin distribution
+
     /**
-     * Adds a consumer to this group
+     * Constructor to create a new consumer group.
+     *
+     * @param groupName The name of the consumer group
      */
-    public void addConsumer(String consumerId) {
-        if (!consumerIds.contains(consumerId)) {
-            consumerIds.add(consumerId);
+    public ConsumerGroup(String groupName) {
+        this.groupId = UUID.randomUUID().toString();
+        this.groupName = groupName;
+        this.createdAt = LocalDateTime.now();
+        this.consumers = new ConcurrentHashMap<>();
+        this.currentConsumerIndex = 0;
+    }
+
+    /**
+     * Adds a consumer to this group.
+     *
+     * @param consumer The consumer to add
+     */
+    public void addConsumer(Consumer consumer) {
+        if (consumer != null && consumer.isActive()) {
+            consumers.put(consumer.getConsumerId(), consumer);
         }
     }
-    
+
     /**
-     * Removes a consumer from this group
+     * Removes a consumer from this group.
+     *
+     * @param consumerId The ID of the consumer to remove
      */
     public void removeConsumer(String consumerId) {
-        consumerIds.remove(consumerId);
+        consumers.remove(consumerId);
     }
-    
+
     /**
-     * Gets the next consumer in round-robin fashion
+     * Gets an active consumer from the group using round-robin strategy.
+     *
+     * @return An active consumer, or null if no active consumers exist
      */
-    public String getNextConsumer() {
-        if (consumerIds.isEmpty()) {
+    public Consumer getNextConsumer() {
+        List<Consumer> activeConsumers = getActiveConsumers();
+        if (activeConsumers.isEmpty()) {
             return null;
         }
-        int index = roundRobinCounter.getAndIncrement() % consumerIds.size();
-        return consumerIds.get(index);
+        
+        // Round-robin selection
+        Consumer selected = activeConsumers.get(currentConsumerIndex % activeConsumers.size());
+        currentConsumerIndex = (currentConsumerIndex + 1) % activeConsumers.size();
+        return selected;
     }
-    
+
     /**
-     * Commits the shared offset for the group
+     * Gets all active consumers in the group.
+     *
+     * @return List of active consumers
      */
-    public void commitOffset() {
-        this.sharedOffset++;
+    public List<Consumer> getActiveConsumers() {
+        List<Consumer> activeConsumers = new ArrayList<>();
+        for (Consumer consumer : consumers.values()) {
+            if (consumer.isActive()) {
+                activeConsumers.add(consumer);
+            }
+        }
+        return activeConsumers;
     }
-    
-    // Getters
-    public String getGroupId() {
-        return groupId;
+
+    /**
+     * Gets the number of active consumers in the group.
+     *
+     * @return Count of active consumers
+     */
+    public int getActiveConsumerCount() {
+        return getActiveConsumers().size();
     }
-    
-    public String getTopicId() {
-        return topicId;
+
+    public Map<String, Consumer> getConsumers() {
+        return Collections.unmodifiableMap(consumers);
     }
-    
-    public List<String> getConsumerIds() {
-        return new ArrayList<>(consumerIds);
-    }
-    
-    public int getSharedOffset() {
-        return sharedOffset;
-    }
-    
-    public boolean isEmpty() {
-        return consumerIds.isEmpty();
-    }
-    
+
     @Override
     public String toString() {
         return "ConsumerGroup{" +
                 "groupId='" + groupId + '\'' +
-                ", topicId='" + topicId + '\'' +
-                ", consumerCount=" + consumerIds.size() +
-                ", sharedOffset=" + sharedOffset +
+                ", groupName='" + groupName + '\'' +
+                ", createdAt=" + createdAt +
+                ", activeConsumerCount=" + getActiveConsumerCount() +
                 '}';
     }
 }
-

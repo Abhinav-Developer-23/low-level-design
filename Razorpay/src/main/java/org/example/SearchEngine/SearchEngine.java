@@ -6,6 +6,10 @@ import org.example.SearchEngine.model.Document;
 import org.example.SearchEngine.model.SearchResult;
 import org.example.SearchEngine.model.User;
 import org.example.SearchEngine.service.*;
+import org.example.SearchEngine.service.Intergace.DatasetService;
+import org.example.SearchEngine.service.Intergace.DocumentService;
+import org.example.SearchEngine.service.Intergace.SearchService;
+import org.example.SearchEngine.service.Intergace.UserService;
 
 import java.util.List;
 

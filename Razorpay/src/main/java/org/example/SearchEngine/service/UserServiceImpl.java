@@ -2,6 +2,7 @@ package org.example.SearchEngine.service;
 
 import org.example.SearchEngine.model.User;
 import org.example.SearchEngine.repository.UserRepository;
+import org.example.SearchEngine.service.Intergace.UserService;
 
 /**
  * Implementation of UserService.

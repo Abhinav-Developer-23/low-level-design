@@ -6,6 +6,7 @@ import org.example.SearchEngine.model.Dataset;
 import org.example.SearchEngine.model.Document;
 import org.example.SearchEngine.model.SearchResult;
 import org.example.SearchEngine.repository.DatasetRepository;
+import org.example.SearchEngine.service.Intergace.SearchService;
 import org.example.SearchEngine.strategy.SortStrategy;
 import org.example.SearchEngine.strategy.SortStrategyFactory;
 

@@ -4,6 +4,7 @@ import org.example.SearchEngine.exception.UnauthorizedAccessException;
 import org.example.SearchEngine.model.Dataset;
 import org.example.SearchEngine.repository.DatasetRepository;
 import org.example.SearchEngine.repository.UserRepository;
+import org.example.SearchEngine.service.Intergace.DatasetService;
 
 /**
  * Implementation of DatasetService.

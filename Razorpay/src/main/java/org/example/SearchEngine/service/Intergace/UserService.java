@@ -1,4 +1,4 @@
-package org.example.SearchEngine.service;
+package org.example.SearchEngine.service.Intergace;
 
 import org.example.SearchEngine.model.User;
 

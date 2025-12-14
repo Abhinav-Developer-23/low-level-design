@@ -5,6 +5,7 @@ import org.example.SearchEngine.exception.UnauthorizedAccessException;
 import org.example.SearchEngine.model.Dataset;
 import org.example.SearchEngine.model.Document;
 import org.example.SearchEngine.repository.DatasetRepository;
+import org.example.SearchEngine.service.Intergace.DocumentService;
 
 /**
  * Implementation of DocumentService.

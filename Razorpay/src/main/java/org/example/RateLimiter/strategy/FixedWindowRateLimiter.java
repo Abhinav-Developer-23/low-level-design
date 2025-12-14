@@ -17,7 +17,7 @@ public class FixedWindowRateLimiter implements RateLimiter {
     private final Map<String, Window> windows = new ConcurrentHashMap<>();
     private final TimeProvider timeProvider;
 
-    private static final class Window {
+    private static final class Window   {
         private long windowStart;
         private int count;
 

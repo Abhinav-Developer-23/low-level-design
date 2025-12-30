@@ -11,69 +11,55 @@ import org.example.model.*;
 import org.example.strategies.reputation.DefaultReputationStrategy;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Singleton Pattern: Single instance of the Stack Overflow system
- * Thread-safe implementation using double-checked locking
  */
 public class StackOverflowSystem {
     
-    private static volatile StackOverflowSystem instance;
+    private static StackOverflowSystem instance;
     
-    private final Map<String, User> users;
-    private final Map<String, Question> questions;
-    private final Map<String, Answer> answers;
-    private final Map<String, Tag> tags;
+    private final List<User> users;
+    private final List<Question> questions;
+    private final List<Answer> answers;
+    private final List<Tag> tags;
     private final List<NotificationObserver> observers;
 
     // Strategy Pattern: Allow changing reputation calculation strategy
     @Setter
     private ReputationStrategy reputationStrategy;
     
-    private final AtomicLong userIdCounter;
-    private final AtomicLong questionIdCounter;
-    private final AtomicLong answerIdCounter;
-    private final AtomicLong commentIdCounter;
-    private final AtomicLong voteIdCounter;
-    private final AtomicLong tagIdCounter;
+    private int userIdCounter;
+    private int questionIdCounter;
+    private int answerIdCounter;
+    private int commentIdCounter;
+    private int voteIdCounter;
+    private int tagIdCounter;
 
     private StackOverflowSystem() {
-        this.users = new ConcurrentHashMap<>();
-        this.questions = new ConcurrentHashMap<>();
-        this.answers = new ConcurrentHashMap<>();
-        this.tags = new ConcurrentHashMap<>();
-        this.observers = new CopyOnWriteArrayList<>();
+        this.users = new ArrayList<>();
+        this.questions = new ArrayList<>();
+        this.answers = new ArrayList<>();
+        this.tags = new ArrayList<>();
+        this.observers = new ArrayList<>();
         this.reputationStrategy = new DefaultReputationStrategy();
         
-        this.userIdCounter = new AtomicLong(0);
-        this.questionIdCounter = new AtomicLong(0);
-        this.answerIdCounter = new AtomicLong(0);
-        this.commentIdCounter = new AtomicLong(0);
-        this.voteIdCounter = new AtomicLong(0);
-        this.tagIdCounter = new AtomicLong(0);
+        this.userIdCounter = 0;
+        this.questionIdCounter = 0;
+        this.answerIdCounter = 0;
+        this.commentIdCounter = 0;
+        this.voteIdCounter = 0;
+        this.tagIdCounter = 0;
     }
 
-    /**
-     * Thread-safe singleton implementation using double-checked locking
-     */
     public static StackOverflowSystem getInstance() {
         if (instance == null) {
-            synchronized (StackOverflowSystem.class) {
-                if (instance == null) {
-                    instance = new StackOverflowSystem();
-                }
-            }
+            instance = new StackOverflowSystem();
         }
         return instance;
     }
 
     // Observer Pattern: Register observers
-
-
-    //#imp
     public void registerObserver(NotificationObserver observer) {
         observers.add(observer);
     }
@@ -84,24 +70,27 @@ public class StackOverflowSystem {
 
     // User Management
     public User createUser(String username, String email, UserRole role) {
-        String userId = "U" + userIdCounter.incrementAndGet();
+        String userId = "U" + (++userIdCounter);
         User user = new User(userId, username, email, role);
-        users.put(userId, user);
+        users.add(user);
         return user;
     }
 
     public User getUser(String userId) {
-        return users.get(userId);
+        return users.stream()
+                .filter(u -> u.getUserId().equals(userId))
+                .findFirst()
+                .orElse(null);
     }
 
     public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+        return new ArrayList<>(users);
     }
 
     // Tag Management
     public Tag createTag(String name, String description) {
         // Check if tag already exists
-        Optional<Tag> existingTag = tags.values().stream()
+        Optional<Tag> existingTag = tags.stream()
                 .filter(t -> t.getName().equalsIgnoreCase(name))
                 .findFirst();
         
@@ -109,26 +98,29 @@ public class StackOverflowSystem {
             return existingTag.get();
         }
         
-        String tagId = "T" + tagIdCounter.incrementAndGet();
+        String tagId = "T" + (++tagIdCounter);
         Tag tag = new Tag(tagId, name, description);
-        tags.put(tagId, tag);
+        tags.add(tag);
         return tag;
     }
 
     public Tag getTag(String tagId) {
-        return tags.get(tagId);
+        return tags.stream()
+                .filter(t -> t.getTagId().equals(tagId))
+                .findFirst()
+                .orElse(null);
     }
 
     public List<Tag> getAllTags() {
-        return new ArrayList<>(tags.values());
+        return new ArrayList<>(tags);
     }
 
     // Question Operations
     public Question postQuestion(User author, String title, String content, Set<Tag> tags) {
-        String questionId = "Q" + questionIdCounter.incrementAndGet();
+        String questionId = "Q" + (++questionIdCounter);
         Question question = new Question(questionId, author, title, content, tags);
         
-        questions.put(questionId, question);
+        questions.add(question);
         author.addQuestion(question);
         
         // Award reputation for posting question
@@ -139,7 +131,11 @@ public class StackOverflowSystem {
     }
 
     public Question getQuestion(String questionId) {
-        Question question = questions.get(questionId);
+        Question question = questions.stream()
+                .filter(q -> q.getQuestionId().equals(questionId))
+                .findFirst()
+                .orElse(null);
+                
         if (question != null) {
             question.incrementViewCount();
         }
@@ -147,21 +143,21 @@ public class StackOverflowSystem {
     }
 
     public List<Question> getAllQuestions() {
-        return new ArrayList<>(questions.values());
+        return new ArrayList<>(questions);
     }
 
     public List<Question> getQuestionsByStatus(QuestionStatus status) {
-        return questions.values().stream()
+        return questions.stream()
                 .filter(q -> q.getStatus() == status)
                 .toList();
     }
 
     // Answer Operations
     public Answer postAnswer(User author, Question question, String content) {
-        String answerId = "A" + answerIdCounter.incrementAndGet();
+        String answerId = "A" + (++answerIdCounter);
         Answer answer = new Answer(answerId, author, content, question);
         
-        answers.put(answerId, answer);
+        answers.add(answer);
         question.addAnswer(answer);
         author.addAnswer(answer);
         
@@ -176,7 +172,10 @@ public class StackOverflowSystem {
     }
 
     public Answer getAnswer(String answerId) {
-        return answers.get(answerId);
+        return answers.stream()
+                .filter(a -> a.getAnswerId().equals(answerId))
+                .findFirst()
+                .orElse(null);
     }
 
     public void acceptAnswer(Answer answer, User accepter) {
@@ -201,7 +200,7 @@ public class StackOverflowSystem {
 
     // Voting Operations
     public void voteOnQuestion(User voter, Question question, VoteType voteType) {
-        String voteId = "V" + voteIdCounter.incrementAndGet();
+        String voteId = "V" + (++voteIdCounter);
         Vote vote = new Vote(voteId, voter, voteType);
         
         VoteType previousVote = question.getUserVote(voter.getUserId());
@@ -225,7 +224,7 @@ public class StackOverflowSystem {
     }
 
     public void voteOnAnswer(User voter, Answer answer, VoteType voteType) {
-        String voteId = "V" + voteIdCounter.incrementAndGet();
+        String voteId = "V" + (++voteIdCounter);
         Vote vote = new Vote(voteId, voter, voteType);
         
         VoteType previousVote = answer.getUserVote(voter.getUserId());
@@ -250,7 +249,7 @@ public class StackOverflowSystem {
 
     // Comment Operations
     public Comment commentOnQuestion(User author, Question question, String content) {
-        String commentId = "C" + commentIdCounter.incrementAndGet();
+        String commentId = "C" + (++commentIdCounter);
         Comment comment = new Comment(commentId, author, content);
         
         question.addComment(comment);
@@ -263,7 +262,7 @@ public class StackOverflowSystem {
     }
 
     public Comment commentOnAnswer(User author, Answer answer, String content) {
-        String commentId = "C" + commentIdCounter.incrementAndGet();
+        String commentId = "C" + (++commentIdCounter);
         Comment comment = new Comment(commentId, author, content);
         
         answer.addComment(comment);
@@ -360,4 +359,3 @@ public class StackOverflowSystem {
         System.out.println("=".repeat(80) + "\n");
     }
 }
-

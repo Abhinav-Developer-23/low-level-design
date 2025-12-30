@@ -1,5 +1,6 @@
 package org.example.model;
 
+import lombok.Getter;
 import org.example.enums.SpotStatus;
 import org.example.enums.VehicleSize;
 import org.example.model.vehicles.Vehicle;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
  * Represents a single parking spot in the parking lot.
  * Follows Single Responsibility Principle - manages its own state and parking operations.
  */
+@Getter
 public class ParkingSpot {
     private final String spotId;
     private final int levelNumber;
@@ -25,34 +27,6 @@ public class ParkingSpot {
         this.spotNumber = spotNumber;
         this.size = size;
         this.status = SpotStatus.AVAILABLE;
-    }
-
-    public String getSpotId() {
-        return spotId;
-    }
-
-    public int getLevelNumber() {
-        return levelNumber;
-    }
-
-    public int getSpotNumber() {
-        return spotNumber;
-    }
-
-    public VehicleSize getSize() {
-        return size;
-    }
-
-    public SpotStatus getStatus() {
-        return status;
-    }
-
-    public Vehicle getParkedVehicle() {
-        return parkedVehicle;
-    }
-
-    public LocalDateTime getOccupiedSince() {
-        return occupiedSince;
     }
 
     /**

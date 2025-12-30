@@ -1,5 +1,6 @@
 package org.example.model;
 
+import lombok.Getter;
 import org.example.model.vehicles.Vehicle;
 
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
  * Represents a parking ticket issued when a vehicle enters the parking lot.
  * Follows Single Responsibility Principle - tracks parking session information.
  */
+@Getter
 public class Ticket {
     private final String ticketId;
     private final Vehicle vehicle;
@@ -25,26 +27,6 @@ public class Ticket {
 
     private String generateTicketId() {
         return "TICKET_" + System.currentTimeMillis() + "_" + (vehicle != null ? vehicle.getLicensePlate() : "UNKNOWN");
-    }
-
-    public String getTicketId() {
-        return ticketId;
-    }
-
-    public Vehicle getVehicle() {
-        return vehicle;
-    }
-
-    public ParkingSpot getParkingSpot() {
-        return parkingSpot;
-    }
-
-    public LocalDateTime getEntryTime() {
-        return entryTime;
-    }
-
-    public LocalDateTime getExitTime() {
-        return exitTime;
     }
 
     /**

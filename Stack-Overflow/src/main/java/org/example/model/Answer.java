@@ -1,7 +1,12 @@
 package org.example.model;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
 import java.util.Objects;
 
+@EqualsAndHashCode(callSuper = false)
+@Getter
 public class Answer extends Post {
     private final Question question;
     private boolean isAccepted;
@@ -12,6 +17,8 @@ public class Answer extends Post {
         this.isAccepted = false;
     }
 
+
+    //#imp
     public synchronized void markAsAccepted() {
         this.isAccepted = true;
     }
@@ -25,33 +32,9 @@ public class Answer extends Post {
         return id;
     }
 
-    public Question getQuestion() {
-        return question;
-    }
-
     public boolean isAccepted() {
         return isAccepted;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Answer answer = (Answer) o;
-        return Objects.equals(id, answer.id);
-    }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return "Answer{" +
-                "author=" + author.getUsername() +
-                ", votes=" + getVoteCount() +
-                ", accepted=" + isAccepted +
-                '}';
-    }
 }

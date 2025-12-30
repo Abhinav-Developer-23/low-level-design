@@ -1,13 +1,17 @@
 package org.example.model;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.example.enums.QuestionStatus;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-
+@Getter
+@EqualsAndHashCode(callSuper = false)
 public class Question extends Post {
     private String title;
+
     private QuestionStatus status;
     private final AtomicInteger viewCount;
     private final Set<Tag> tags;
@@ -54,14 +58,6 @@ public class Question extends Post {
         return id;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public QuestionStatus getStatus() {
-        return status;
-    }
-
     public int getViewCount() {
         return viewCount.get();
     }
@@ -74,28 +70,5 @@ public class Question extends Post {
         return new ArrayList<>(answers);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Question question = (Question) o;
-        return Objects.equals(id, question.id);
-    }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return "Question{" +
-                "title='" + title + '\'' +
-                ", author=" + author.getUsername() +
-                ", votes=" + getVoteCount() +
-                ", answers=" + answers.size() +
-                ", views=" + viewCount.get() +
-                ", status=" + status +
-                '}';
-    }
 }

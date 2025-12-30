@@ -1,10 +1,14 @@
 package org.example.model;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.example.enums.VoteType;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Getter
+@EqualsAndHashCode
 public class Vote {
     private final String voteId;
     private final User user;
@@ -23,33 +27,6 @@ public class Vote {
         this.voteType = newVoteType;
     }
 
-    public String getVoteId() {
-        return voteId;
-    }
 
-    public User getUser() {
-        return user;
-    }
-
-    public VoteType getVoteType() {
-        return voteType;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Vote vote = (Vote) o;
-        return Objects.equals(voteId, vote.voteId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(voteId);
-    }
 }
 

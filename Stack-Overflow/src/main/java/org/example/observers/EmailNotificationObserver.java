@@ -1,5 +1,6 @@
 package org.example.observers;
 
+import lombok.Getter;
 import org.example.interfaces.NotificationObserver;
 import org.example.model.User;
 
@@ -7,6 +8,7 @@ import org.example.model.User;
  * Observer Pattern: Email implementation for notifications
  * In a real system, this would send actual emails
  */
+@Getter
 public class EmailNotificationObserver implements NotificationObserver {
     
     private final User user;
@@ -56,8 +58,5 @@ public class EmailNotificationObserver implements NotificationObserver {
         System.out.println("[EMAIL] To: " + user.getEmail() + " | Subject: " + subject + " | Body: " + body);
     }
 
-    public User getUser() {
-        return user;
-    }
 }
 

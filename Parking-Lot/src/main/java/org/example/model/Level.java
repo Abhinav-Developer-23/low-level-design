@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import org.example.enums.SpotStatus;
 import org.example.enums.VehicleSize;
 import org.example.interfaces.ParkingStrategy;
@@ -15,6 +16,7 @@ import org.example.model.vehicles.Vehicle;
  * Follows Single Responsibility Principle - manages parking spots on one level.
  */
 public class Level {
+    @Getter
     private final int levelNumber;
     private final List<ParkingSpot> parkingSpots;
     private final ParkingStrategy parkingStrategy;
@@ -55,10 +57,6 @@ public class Level {
                 String.format("L%d-R%d", levelNumber, spotNumber++),
                 levelNumber, spotNumber, VehicleSize.REGULAR));
         }
-    }
-
-    public int getLevelNumber() {
-        return levelNumber;
     }
 
     public List<ParkingSpot> getParkingSpots() {

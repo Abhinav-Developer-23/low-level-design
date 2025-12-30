@@ -1,5 +1,6 @@
 package org.example.model.vehicles;
 
+import lombok.Getter;
 import org.example.model.ParkingSpot;
 import org.example.enums.VehicleSize;
 
@@ -7,6 +8,7 @@ import org.example.enums.VehicleSize;
  * Abstract base class for all types of vehicles in the parking lot system.
  * Follows Single Responsibility Principle - handles vehicle-specific properties and behavior.
  */
+@Getter
 public abstract class Vehicle {
     protected String licensePlate;
     protected String ownerName;
@@ -16,18 +18,6 @@ public abstract class Vehicle {
         this.licensePlate = licensePlate;
         this.ownerName = ownerName;
         this.size = size;
-    }
-
-    public String getLicensePlate() {
-        return licensePlate;
-    }
-
-    public String getOwnerName() {
-        return ownerName;
-    }
-
-    public VehicleSize getSize() {
-        return size;
     }
 
     /**

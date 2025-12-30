@@ -1,5 +1,6 @@
 package org.example.model;
 
+import lombok.Getter;
 import org.example.enums.VoteType;
 import org.example.interfaces.Commentable;
 import org.example.interfaces.Votable;
@@ -16,7 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Abstract base class for posts (Question and Answer)
  * Implements common functionality for voting and commenting
  */
-public abstract class Post implements Votable, Commentable {
+@Getter
+public  class  Post implements Votable, Commentable {
     
     protected final String id;
     protected final User author;
@@ -48,7 +50,7 @@ public abstract class Post implements Votable, Commentable {
 
     // Votable interface implementation
     @Override
-    public Vote addVote(Vote vote) {
+    public void addVote(Vote vote) {
         String userId = vote.getUser().getUserId();
         VoteType newVoteType = vote.getVoteType();
         VoteType existingVoteType = userVotes.get(userId);
@@ -69,8 +71,7 @@ public abstract class Post implements Votable, Commentable {
         } else {
             downvotes.incrementAndGet();
         }
-        
-        return vote;
+
     }
 
     @Override
@@ -121,25 +122,6 @@ public abstract class Post implements Votable, Commentable {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Common getters
-    public String getId() {
-        return id;
-    }
 
-    public User getAuthor() {
-        return author;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
 }
 

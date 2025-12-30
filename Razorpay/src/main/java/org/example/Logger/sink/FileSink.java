@@ -1,5 +1,6 @@
 package org.example.Logger.sink;
 
+import lombok.Getter;
 import org.example.Logger.interfaces.LogSink;
 import org.example.Logger.model.LogMessage;
 
@@ -12,6 +13,7 @@ import java.nio.file.Paths;
 /**
  * File sink implementation - writes logs to a file
  */
+@Getter
 public class FileSink implements LogSink {
     private final String filePath;
 
@@ -46,9 +48,7 @@ public class FileSink implements LogSink {
         return "FILE";
     }
 
-    public String getFilePath() {
-        return filePath;
-    }
 }
+
 
 

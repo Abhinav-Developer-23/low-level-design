@@ -1,5 +1,6 @@
 package org.example.system;
 
+import lombok.Setter;
 import org.example.enums.QuestionStatus;
 import org.example.enums.UserRole;
 import org.example.enums.VoteType;
@@ -27,7 +28,9 @@ public class StackOverflowSystem {
     private final Map<String, Answer> answers;
     private final Map<String, Tag> tags;
     private final List<NotificationObserver> observers;
-    
+
+    // Strategy Pattern: Allow changing reputation calculation strategy
+    @Setter
     private ReputationStrategy reputationStrategy;
     
     private final AtomicLong userIdCounter;
@@ -67,12 +70,10 @@ public class StackOverflowSystem {
         return instance;
     }
 
-    // Strategy Pattern: Allow changing reputation calculation strategy
-    public void setReputationStrategy(ReputationStrategy strategy) {
-        this.reputationStrategy = strategy;
-    }
-
     // Observer Pattern: Register observers
+
+
+    //#imp
     public void registerObserver(NotificationObserver observer) {
         observers.add(observer);
     }

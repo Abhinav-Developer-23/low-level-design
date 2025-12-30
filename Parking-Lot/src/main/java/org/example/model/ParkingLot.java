@@ -110,7 +110,7 @@ public class ParkingLot {
         try {
             for (Level level : levels) {
                 Optional<ParkingSpot> spot = level.removeVehicle(ticket.getVehicle().getLicensePlate());
-                if (spot.isPresent()) {
+                if (spot.isPresent())  {
                     notifyObservers();
                     return Optional.of(ticket.getVehicle());
                 }

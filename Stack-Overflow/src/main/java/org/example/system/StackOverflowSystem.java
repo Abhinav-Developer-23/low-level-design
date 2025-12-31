@@ -71,8 +71,14 @@ public class StackOverflowSystem {
 
     // Observer Pattern: Register observers
 
-
-    //#imp
+    /**
+     * //IMP
+     * Registers an observer to receive notifications about system events.
+     * Observers will be notified when questions are answered, comments are added,
+     * answers are accepted, and votes are cast.
+     * 
+     * @param observer The observer to register for notifications
+     */
     public void registerObserver(NotificationObserver observer) {
         observers.add(observer);
     }
@@ -82,6 +88,17 @@ public class StackOverflowSystem {
     }
 
     // User Management
+    
+    /**
+     * //IMP
+     * Creates a new user in the system with auto-generated unique ID.
+     * The user is initialized with zero reputation and empty activity lists.
+     * 
+     * @param username The username for the new user
+     * @param email The email address of the user
+     * @param role The role of the user (MEMBER, MODERATOR, ADMIN)
+     * @return The newly created User object with a unique ID
+     */
     public User createUser(String username, String email, UserRole role) {
         String userId = "U" + (++userIdCounter);
         User user = new User(userId, username, email, role);
@@ -98,6 +115,17 @@ public class StackOverflowSystem {
     }
 
     // Tag Management
+    
+    /**
+     * //IMP
+     * Creates a new tag or returns an existing one if a tag with the same name already exists.
+     * Tag names are case-insensitive and automatically normalized to lowercase.
+     * This prevents duplicate tags with different casing.
+     * 
+     * @param name The name of the tag (case-insensitive)
+     * @param description A description of what the tag represents
+     * @return The newly created Tag object or existing tag if name already exists
+     */
     public Tag createTag(String name, String description) {
         // Check if tag already exists
         Optional<Tag> existingTag = tags.values().stream()
@@ -123,6 +151,19 @@ public class StackOverflowSystem {
     }
 
     // Question Operations
+    
+    /**
+     * //IMP
+     * Posts a new question in the system with auto-generated unique ID.
+     * The question is associated with the author and tagged with specified tags.
+     * The author receives reputation points for posting the question.
+     * 
+     * @param author The user posting the question
+     * @param title The title of the question
+     * @param content The detailed content/body of the question
+     * @param tags A set of tags to categorize the question
+     * @return The newly created Question object with status OPEN
+     */
     public Question postQuestion(User author, String title, String content, Set<Tag> tags) {
         String questionId = "Q" + (++questionIdCounter);
         Question question = new Question(questionId, author, title, content, tags);
@@ -156,6 +197,19 @@ public class StackOverflowSystem {
     }
 
     // Answer Operations
+    
+    /**
+     * //IMP
+     * Posts a new answer to an existing question with auto-generated unique ID.
+     * The answer is linked to both the question and the author.
+     * The author receives reputation points for posting the answer.
+     * All registered observers are notified about the new answer.
+     * 
+     * @param author The user posting the answer
+     * @param question The question being answered
+     * @param content The content/body of the answer
+     * @return The newly created Answer object
+     */
     public Answer postAnswer(User author, Question question, String content) {
         String answerId = "A" + (++answerIdCounter);
         Answer answer = new Answer(answerId, author, content, question);
@@ -178,6 +232,16 @@ public class StackOverflowSystem {
         return answers.get(answerId);
     }
 
+    /**
+     * Marks an answer as accepted by the question author.
+     * Only the original question author can accept an answer to their question.
+     * If another answer was previously accepted, it will be unmarked.
+     * The answer author receives bonus reputation points for having their answer accepted.
+     * 
+     * @param answer The answer to be accepted
+     * @param accepter The user accepting the answer (must be the question author)
+     * @throws IllegalStateException if the accepter is not the question author
+     */
     public void acceptAnswer(Answer answer, User accepter) {
         // Only question author can accept answer
         if (!answer.getQuestion().getAuthor().equals(accepter)) {
@@ -199,6 +263,19 @@ public class StackOverflowSystem {
     }
 
     // Voting Operations
+    
+    /**
+     * //IMP
+     * Casts a vote (upvote or downvote) on a question.
+     * If the user previously voted, the old vote is replaced with the new one.
+     * The question author's reputation is adjusted based on the vote type.
+     * Upvotes increase reputation, downvotes decrease it.
+     * All registered observers are notified about the vote.
+     * 
+     * @param voter The user casting the vote
+     * @param question The question being voted on
+     * @param voteType The type of vote (UPVOTE or DOWNVOTE)
+     */
     public void voteOnQuestion(User voter, Question question, VoteType voteType) {
         String voteId = "V" + (++voteIdCounter);
         Vote vote = new Vote(voteId, voter, voteType);
@@ -223,6 +300,18 @@ public class StackOverflowSystem {
         notifyQuestionVoted(question, voter);
     }
 
+    /**
+     * //IMP
+     * Casts a vote (upvote or downvote) on an answer.
+     * If the user previously voted, the old vote is replaced with the new one.
+     * The answer author's reputation is adjusted based on the vote type.
+     * Upvotes increase reputation, downvotes decrease it.
+     * All registered observers are notified about the vote.
+     * 
+     * @param voter The user casting the vote
+     * @param answer The answer being voted on
+     * @param voteType The type of vote (UPVOTE or DOWNVOTE)
+     */
     public void voteOnAnswer(User voter, Answer answer, VoteType voteType) {
         String voteId = "V" + (++voteIdCounter);
         Vote vote = new Vote(voteId, voter, voteType);
@@ -248,6 +337,18 @@ public class StackOverflowSystem {
     }
 
     // Comment Operations
+    
+    /**
+     * //IMP
+     * Adds a comment to a question with auto-generated unique ID.
+     * The comment is linked to both the question and the author.
+     * All registered observers are notified about the new comment.
+     * 
+     * @param author The user posting the comment
+     * @param question The question being commented on
+     * @param content The content/text of the comment
+     * @return The newly created Comment object
+     */
     public Comment commentOnQuestion(User author, Question question, String content) {
         String commentId = "C" + (++commentIdCounter);
         Comment comment = new Comment(commentId, author, content);
@@ -261,6 +362,17 @@ public class StackOverflowSystem {
         return comment;
     }
 
+    /**
+     * //IMP
+     * Adds a comment to an answer with auto-generated unique ID.
+     * The comment is linked to both the answer and the author.
+     * All registered observers are notified about the new comment.
+     * 
+     * @param author The user posting the comment
+     * @param answer The answer being commented on
+     * @param content The content/text of the comment
+     * @return The newly created Comment object
+     */
     public Comment commentOnAnswer(User author, Answer answer, String content) {
         String commentId = "C" + (++commentIdCounter);
         Comment comment = new Comment(commentId, author, content);

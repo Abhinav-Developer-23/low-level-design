@@ -13,7 +13,6 @@ import org.example.strategies.reputation.DefaultReputationStrategy;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Singleton Pattern: Single instance of the Stack Overflow system
@@ -33,12 +32,12 @@ public class StackOverflowSystem {
     @Setter
     private ReputationStrategy reputationStrategy;
     
-    private final AtomicLong userIdCounter;
-    private final AtomicLong questionIdCounter;
-    private final AtomicLong answerIdCounter;
-    private final AtomicLong commentIdCounter;
-    private final AtomicLong voteIdCounter;
-    private final AtomicLong tagIdCounter;
+    private int userIdCounter;
+    private int questionIdCounter;
+    private int answerIdCounter;
+    private int commentIdCounter;
+    private int voteIdCounter;
+    private int tagIdCounter;
 
     private StackOverflowSystem() {
         this.users = new ConcurrentHashMap<>();
@@ -48,12 +47,12 @@ public class StackOverflowSystem {
         this.observers = new CopyOnWriteArrayList<>();
         this.reputationStrategy = new DefaultReputationStrategy();
         
-        this.userIdCounter = new AtomicLong(0);
-        this.questionIdCounter = new AtomicLong(0);
-        this.answerIdCounter = new AtomicLong(0);
-        this.commentIdCounter = new AtomicLong(0);
-        this.voteIdCounter = new AtomicLong(0);
-        this.tagIdCounter = new AtomicLong(0);
+        this.userIdCounter = 0;
+        this.questionIdCounter = 0;
+        this.answerIdCounter = 0;
+        this.commentIdCounter = 0;
+        this.voteIdCounter = 0;
+        this.tagIdCounter = 0;
     }
 
     /**
@@ -84,7 +83,7 @@ public class StackOverflowSystem {
 
     // User Management
     public User createUser(String username, String email, UserRole role) {
-        String userId = "U" + userIdCounter.incrementAndGet();
+        String userId = "U" + (++userIdCounter);
         User user = new User(userId, username, email, role);
         users.put(userId, user);
         return user;
@@ -109,7 +108,7 @@ public class StackOverflowSystem {
             return existingTag.get();
         }
         
-        String tagId = "T" + tagIdCounter.incrementAndGet();
+        String tagId = "T" + (++tagIdCounter);
         Tag tag = new Tag(tagId, name, description);
         tags.put(tagId, tag);
         return tag;
@@ -125,7 +124,7 @@ public class StackOverflowSystem {
 
     // Question Operations
     public Question postQuestion(User author, String title, String content, Set<Tag> tags) {
-        String questionId = "Q" + questionIdCounter.incrementAndGet();
+        String questionId = "Q" + (++questionIdCounter);
         Question question = new Question(questionId, author, title, content, tags);
         
         questions.put(questionId, question);
@@ -158,7 +157,7 @@ public class StackOverflowSystem {
 
     // Answer Operations
     public Answer postAnswer(User author, Question question, String content) {
-        String answerId = "A" + answerIdCounter.incrementAndGet();
+        String answerId = "A" + (++answerIdCounter);
         Answer answer = new Answer(answerId, author, content, question);
         
         answers.put(answerId, answer);
@@ -201,7 +200,7 @@ public class StackOverflowSystem {
 
     // Voting Operations
     public void voteOnQuestion(User voter, Question question, VoteType voteType) {
-        String voteId = "V" + voteIdCounter.incrementAndGet();
+        String voteId = "V" + (++voteIdCounter);
         Vote vote = new Vote(voteId, voter, voteType);
         
         VoteType previousVote = question.getUserVote(voter.getUserId());
@@ -225,7 +224,7 @@ public class StackOverflowSystem {
     }
 
     public void voteOnAnswer(User voter, Answer answer, VoteType voteType) {
-        String voteId = "V" + voteIdCounter.incrementAndGet();
+        String voteId = "V" + (++voteIdCounter);
         Vote vote = new Vote(voteId, voter, voteType);
         
         VoteType previousVote = answer.getUserVote(voter.getUserId());
@@ -250,7 +249,7 @@ public class StackOverflowSystem {
 
     // Comment Operations
     public Comment commentOnQuestion(User author, Question question, String content) {
-        String commentId = "C" + commentIdCounter.incrementAndGet();
+        String commentId = "C" + (++commentIdCounter);
         Comment comment = new Comment(commentId, author, content);
         
         question.addComment(comment);
@@ -263,7 +262,7 @@ public class StackOverflowSystem {
     }
 
     public Comment commentOnAnswer(User author, Answer answer, String content) {
-        String commentId = "C" + commentIdCounter.incrementAndGet();
+        String commentId = "C" + (++commentIdCounter);
         Comment comment = new Comment(commentId, author, content);
         
         answer.addComment(comment);

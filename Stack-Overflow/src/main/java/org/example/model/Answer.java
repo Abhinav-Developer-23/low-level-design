@@ -5,7 +5,7 @@ import lombok.Getter;
 
 import java.util.Objects;
 
-@EqualsAndHashCode(callSuper = false)
+
 @Getter
 public class Answer extends Post {
     private final Question question;

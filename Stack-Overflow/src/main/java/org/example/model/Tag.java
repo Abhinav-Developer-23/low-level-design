@@ -6,7 +6,7 @@ import lombok.Getter;
 import java.util.Objects;
 
 @Getter
-@EqualsAndHashCode
+
 public class Tag {
     private final String tagId;
     private final String name;

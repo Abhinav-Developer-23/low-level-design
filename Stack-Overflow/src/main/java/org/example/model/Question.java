@@ -8,7 +8,6 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 @Getter
-@EqualsAndHashCode(callSuper = false)
 public class Question extends Post {
     private String title;
 

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
-@EqualsAndHashCode
+
 public class Vote {
     private final String voteId;
     private final User user;

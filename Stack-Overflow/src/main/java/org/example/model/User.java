@@ -12,8 +12,9 @@ import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 @Getter
 @Setter
-@EqualsAndHashCode
+
 public class User {
+
 
     private final String userId;
 

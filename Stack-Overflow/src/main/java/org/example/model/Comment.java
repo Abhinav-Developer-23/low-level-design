@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
-@EqualsAndHashCode
+
 public class Comment {
     private final String commentId;
     private final User author;
